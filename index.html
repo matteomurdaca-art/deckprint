@@ -66,8 +66,10 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .split::before{content:"";position:sticky;top:calc(50vh - 18px);display:block;margin:0 auto;width:4px;height:36px;border-radius:3px;background:var(--rule)}
 @media (max-width:960px){.grid{grid-template-columns:1fr;gap:16px}.split{display:none}.side{position:static;max-height:none;overflow:visible}.side .pane{overflow:visible}}
 .panel{background:var(--panel);border:1px solid var(--rule);border-radius:14px;box-shadow:var(--shadow)}
-.tabs{display:flex;gap:2px;padding:6px;border-bottom:1px solid var(--rule);overflow-x:auto}
-.tab{flex:1 0 auto;border:0;background:transparent;border-radius:9px;padding:8px 7px;display:flex;align-items:center;gap:6px;justify-content:center;font-weight:600;font-size:.86rem;color:var(--muted)}
+.tabs{display:flex;gap:2px;padding:6px;border-bottom:1px solid var(--rule);overflow:hidden;container-type:inline-size}
+.tab{flex:1 1 0;min-width:0;border:0;background:transparent;border-radius:9px;padding:8px 4px;display:flex;align-items:center;gap:6px;justify-content:center;font-weight:600;font-size:.86rem;color:var(--muted)}
+.tab .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+@container (max-width:470px){.tab[aria-selected="false"] .l{display:none}.tab[aria-selected="true"]{flex:2.4 1 0}}
 .tab .n{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:.7rem;color:#fff;flex:none}
 .tab[aria-selected="true"]{background:var(--soft);color:var(--ink)}
 .tab:nth-child(1) .n{background:var(--cyan)} .tab:nth-child(2) .n{background:var(--magenta)} .tab:nth-child(3) .n{background:var(--yellow);color:#18181D} .tab:nth-child(4) .n{background:#18181D} .tab:nth-child(5) .n{background:var(--ok)}
@@ -783,7 +785,7 @@ function buildPanel(){
   $("#tagline").textContent=l.tagline; document.documentElement.lang=LANG;
   $("#lEN").setAttribute("aria-pressed",LANG==="en"); $("#lIT").setAttribute("aria-pressed",LANG==="it");
   $("#bLoadP").innerHTML=ICON.open+esc(l.loadP); $("#bSaveP").innerHTML=ICON.save+esc(l.saveP); $("#bExportTop").innerHTML=ICON.pdf+esc(l.export); $("#bExportTop").classList.add("js-export"); refreshProUI();
-  $("#tabs").innerHTML = l.tabs.map((t,i)=>`<button class="tab" role="tab" data-tab="${i}" aria-selected="${S.tab===i}"><span class="n">${i+1}</span>${esc(t)}</button>`).join("");
+  $("#tabs").innerHTML = l.tabs.map((t,i)=>`<button class="tab" role="tab" data-tab="${i}" title="${esc(t)}" aria-label="${esc(t)}" aria-selected="${S.tab===i}"><span class="n">${i+1}</span><span class="l">${esc(t)}</span></button>`).join("");
   $("#pane").innerHTML = paneHTML();
   bindPanel(); drawThemePreviews();
 }
@@ -1022,7 +1024,7 @@ $("#bPro").onclick=async()=>{ const c=await askPro(0); if(c==="buy") await buyPr
 /* app installata: apri i file .csv / .deckprint con doppio clic (File Handling API) */
 if("launchQueue" in window) window.launchQueue.setConsumer(async p=>{ for(const h of (p.files||[])){ try{ const f=await h.getFile(), txt=decodeText(await f.arrayBuffer());
   if(/\.(deckprint|cardpress|json)$/i.test(f.name)) loadProject(JSON.parse(txt)); else setData(txt); }catch(e){ toast("?"); } } });
-if(EDITION==="store" && "serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
+if(EDITION==="store" && "serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) { const had=!!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(had && !window.__swr){ window.__swr=1; location.reload(); } }); navigator.serviceWorker.register("sw.js").then(r=>{ try{ r.update(); }catch(e){} }).catch(()=>{}); }
 checkPro();
 document.addEventListener("keydown", e=>{ if(e.target.matches("input,textarea,select")) return; const n=S.data.rows.length; if(!n||S.view==="sheet") return; if(e.key==="ArrowRight"){ S.sel=(S.sel+1)%n; scheduleRender(); } if(e.key==="ArrowLeft"){ S.sel=(S.sel-1+n)%n; scheduleRender(); } });
 
