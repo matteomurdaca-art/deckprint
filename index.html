@@ -278,6 +278,7 @@ const T = {
   pfMissing:(n,list)=>`${n} card(s) point to a picture that is not in your library: ${list}.`,
   pfLow:(list)=>`Too small for sharp printing (under 150 dpi at this card size): ${list}. Use a bigger file.`,
   pfBlur:(list)=>`Will print blurry (under 100 dpi): ${list}. Use a bigger file.`,
+  pfNoPic:n=>`${n} card(s) have no picture: they will print with an empty box where the picture goes. Add one in "Edit this card", or turn off the Image slot.`,
   libLow:d=>`Low resolution: about ${d} dpi at the size it is printed`,
   libT:"Your images", libHint:"Put here every picture the deck will use: drop files or tap +. Then, in \"Edit this card\", pick the front picture and the back picture from this library. A file named like a card (dragon.png for the card \"Dragon\") also attaches itself to the front.", libAdd:"Add", libEmpty:"No images yet. Drop pictures here or tap +.", libRemove:"Remove from library", libGone:n=>`Removed ${n}`,
   pickT:"Choose a picture", pickUp:"Upload new…", pickNone:"No picture", pickClose:"Close", edFront:"Front picture", edBack:"Back picture", edBackSame:"Same back as the whole deck", newBackImgCol:"back image",
@@ -305,6 +306,7 @@ const T = {
   pfMissing:(n,list)=>`${n} carte indicano un'immagine che non è nella tua libreria: ${list}.`,
   pfLow:(list)=>`Troppo piccole per una stampa nitida (sotto i 150 dpi a questa misura): ${list}. Usa un file più grande.`,
   pfBlur:(list)=>`Si stamperanno sfocate (sotto i 100 dpi): ${list}. Usa un file più grande.`,
+  pfNoPic:n=>`${n} carte non hanno un'immagine: verranno stampate con un riquadro vuoto al posto della figura. Aggiungila in "Modifica questa carta", oppure spegni la voce Immagine.`,
   libLow:d=>`Bassa risoluzione: circa ${d} dpi alla misura di stampa`,
   libT:"Le tue immagini", libHint:"Metti qui tutte le immagini che useranno le carte: trascinale o tocca +. Poi, in \"Modifica questa carta\", scegli dalla libreria l'immagine del fronte e quella del retro. Un file con il nome di una carta (drago.png per la carta \"Drago\") si collega da solo al fronte.", libAdd:"Aggiungi", libEmpty:"Ancora nessuna immagine. Trascinale qui o tocca +.", libRemove:"Togli dalla libreria", libGone:n=>`Tolta ${n}`,
   pickT:"Scegli un'immagine", pickUp:"Carica nuove…", pickNone:"Nessuna immagine", pickClose:"Chiudi", edFront:"Immagine del fronte", edBack:"Immagine del retro", edBackSame:"Stesso retro di tutto il mazzo", newBackImgCol:"immagine retro",
@@ -568,7 +570,7 @@ function drawSide(ctx, side, row, bleed, own){
     const ih = (H-2*pad)*sd.image.h/100, im = getImage(val(row, sd.image.field));
     ctx.save(); rrect(ctx, innerX, top, innerW, ih, 2); ctx.clip();
     if(im){ const r=Math.max(innerW/im.width, ih/im.height), iw=im.width*r, ihh=im.height*r; ctx.drawImage(im, innerX+(innerW-iw)/2, top+(ih-ihh)/2, iw, ihh); }
-    else { ctx.fillStyle=mix(accent,"#FFFFFF",.7); ctx.fillRect(innerX, top, innerW, ih); ctx.strokeStyle=mix(accent,"#FFFFFF",.35); ctx.lineWidth=.35; ctx.beginPath(); ctx.moveTo(innerX+innerW*.3,top+ih*.62); ctx.lineTo(innerX+innerW*.45,top+ih*.42); ctx.lineTo(innerX+innerW*.58,top+ih*.56); ctx.lineTo(innerX+innerW*.66,top+ih*.48); ctx.lineTo(innerX+innerW*.74,top+ih*.62); ctx.stroke(); ctx.beginPath(); ctx.arc(innerX+innerW*.66,top+ih*.33,ih*.06,0,6.283); ctx.stroke(); }
+    else { ctx.fillStyle=mix(accent,"#FFFFFF",.7); ctx.fillRect(innerX, top, innerW, ih); if(!exporting){ ctx.strokeStyle=mix(accent,"#FFFFFF",.35); ctx.lineWidth=.35; ctx.beginPath(); ctx.moveTo(innerX+innerW*.3,top+ih*.62); ctx.lineTo(innerX+innerW*.45,top+ih*.42); ctx.lineTo(innerX+innerW*.58,top+ih*.56); ctx.lineTo(innerX+innerW*.66,top+ih*.48); ctx.lineTo(innerX+innerW*.74,top+ih*.62); ctx.stroke(); ctx.beginPath(); ctx.arc(innerX+innerW*.66,top+ih*.33,ih*.06,0,6.283); ctx.stroke(); } }
     ctx.restore(); top += ih + 2;
   }
   // testo principale (con riquadro chiaro nello stile Festa)
@@ -644,6 +646,7 @@ function preflight(){
   const d=deck(); items.push({t:"info", m:l.pfSheets(d.length, lo.n, Math.ceil(d.length/lo.n))});
   const used=[...new Set(d)], cols=[S.front.image.field, S.back.mode==="uniform"?S.back.imgCol:S.back.image.field].filter((c,i,x)=>c && colIdx(c)>=0 && x.indexOf(c)===i), miss=new Set(); let missRows=0;
   used.forEach(ri=>{ let hit=false; cols.forEach(c=>{ const v=String(val(S.data.rows[ri],c)||"").trim(); if(v && !imgKey(v)){ miss.add(v); hit=true; } }); if(hit) missRows++; });
+  { const fi=S.front.image.field; if(fi && colIdx(fi)>=0){ const np=used.filter(ri=>!String(val(S.data.rows[ri],fi)||"").trim()).length; if(np) items.push({t:"warn", m:l.pfNoPic(np)}); } }
   if(missRows) items.push({t:"warn", m:l.pfMissing(missRows, [...miss].slice(0,6).join(", ")+(miss.size>6?"…":""))});
   const u=imgUsage(), nm=k=>`${k.replace(/\.[a-z0-9]+$/,"")} (${Math.round(u[k])} dpi)`;
   const blur=Object.keys(u).filter(k=>u[k]<100), low=Object.keys(u).filter(k=>u[k]>=100&&u[k]<150);

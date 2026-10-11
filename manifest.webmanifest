@@ -1,5 +1,5 @@
 {
-  "id": "/",
+  "id": "./",
   "name": "Deck Print - Card Maker",
   "short_name": "Deck Print",
   "description": "Make your own card deck and print it at home. Write your cards or import a spreadsheet, add your own pictures, preview every card front and back, export a double-sided PDF with crop marks.",
@@ -8,7 +8,6 @@
   "scope": "./",
   "display": "standalone",
   "display_override": [
-    "window-controls-overlay",
     "standalone"
   ],
   "orientation": "any",
