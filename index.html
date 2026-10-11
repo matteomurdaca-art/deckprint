@@ -50,6 +50,13 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .btn.primary:hover{filter:brightness(1.15)}
 .btn:disabled{opacity:.5;cursor:wait}
+.btn.ic{padding:8px 10px}.btn.ic:disabled{opacity:.35;cursor:default}
+.pf{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;font-size:.82rem}
+.pf li{display:flex;gap:8px;align-items:flex-start;border-radius:10px;padding:8px 10px;background:var(--soft)}
+.pf li b{flex:none;width:18px;text-align:center}
+.pf .err{background:#FBE3DF;color:#7A1F12}.pf .warn{background:#FFF1CC;color:#5B4300}.pf .ok{background:#DDF3E5;color:#14532D}
+.pf small{display:block;opacity:.85;margin-top:2px;word-break:break-word}
+.libw{position:absolute;left:3px;bottom:22px;background:#E8A500;color:#18181D;border-radius:10px;font-size:.62rem;font-weight:700;padding:1px 6px;line-height:1.5}
 .lang{display:inline-flex;border:1px solid var(--rule);border-radius:9px;overflow:hidden;background:var(--panel)}
 .lang button{border:0;background:transparent;padding:8px 10px;font-size:.82rem;color:var(--muted)}
 .lang button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:700}
@@ -67,9 +74,9 @@ input,select,textarea{font:inherit;color:var(--ink)}
 @media (max-width:960px){.grid{grid-template-columns:1fr;gap:16px}.split{display:none}.side{position:static;max-height:none;overflow:visible}.side .pane{overflow:visible}}
 .panel{background:var(--panel);border:1px solid var(--rule);border-radius:14px;box-shadow:var(--shadow)}
 .tabs{display:flex;gap:2px;padding:6px;border-bottom:1px solid var(--rule);overflow:hidden;container-type:inline-size}
-.tab{flex:1 1 0;min-width:0;border:0;background:transparent;border-radius:9px;padding:8px 4px;display:flex;align-items:center;gap:6px;justify-content:center;font-weight:600;font-size:.86rem;color:var(--muted)}
+.tab{flex:1 1 0;min-width:0;border:0;background:transparent;border-radius:9px;padding:8px 3px;display:flex;align-items:center;gap:5px;justify-content:center;font-weight:600;font-size:.8rem;color:var(--muted)}
 .tab .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-@container (max-width:470px){.tab[aria-selected="false"] .l{display:none}.tab[aria-selected="true"]{flex:2.4 1 0}}
+@container (max-width:395px){.tab[aria-selected="false"] .l{display:none}.tab[aria-selected="true"]{flex:2.4 1 0}}
 .tab .n{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:.7rem;color:#fff;flex:none}
 .tab[aria-selected="true"]{background:var(--soft);color:var(--ink)}
 .tab:nth-child(1) .n{background:var(--cyan)} .tab:nth-child(2) .n{background:var(--magenta)} .tab:nth-child(3) .n{background:var(--yellow);color:#18181D} .tab:nth-child(4) .n{background:#18181D} .tab:nth-child(5) .n{background:var(--ok)}
@@ -220,6 +227,7 @@ textarea{min-height:130px;font-family:var(--f-mono);font-size:.76rem;resize:vert
     </div>
     <div class="actions">
       <span class="lang" role="group" aria-label="Language"><button id="lEN">EN</button><button id="lIT">IT</button></span>
+      <span class="undo" role="group" style="display:inline-flex;gap:4px"><button class="btn ic" id="bUndo" type="button" disabled></button><button class="btn ic" id="bRedo" type="button" disabled></button></span>
       <button class="btn" id="bLoadP"></button>
       <button class="btn" id="bSaveP"></button>
       <button class="btn pro" id="bPro" hidden></button>
@@ -263,6 +271,14 @@ const T = {
  en:{tagline:"Make your own card deck and print it at home", tabs:["Data","Size","Front","Back","Print"],
   h1:"Your cards", l1:"One row = one card. Paste from Excel or Google Sheets, first row with the column names.", loadCsv:"Load CSV", sample:"Sample deck", rows:n=>`${n} cards`, cols:"Columns found",
   imgs:"Images", imgsHint:"Drop pictures here or click to choose. A file named like a card (dragon.png for the card \"Dragon\") attaches itself. Or use \"Edit this card\" above the preview to pick one card at a time.", qty:"Or take the copies from a column",copiesAll:"Copies of each card", copiesHint:"How many times each card is printed. For one card only, open \"Edit this card\" and change its Copies.", edCopies:"Copies of this card",
+  undoT:"Undo (Ctrl+Z)", redoT:"Redo (Ctrl+Y)", undone:"Undone.", redone:"Redone.",
+  pfT:"Check before printing", pfNoCards:"There are no cards to print yet.", pfOk:"All good: everything fits and the pictures are sharp enough.",
+  pfNoFit:(w,h,pg)=>`A card of ${w}×${h} mm (bleed included) does not fit on ${pg}. Choose a bigger sheet, or reduce the bleed or the card size.`,
+  pfSheets:(n,per,sh)=>`${n} card(s) · ${per} per sheet · ${sh} sheet(s)`,
+  pfMissing:(n,list)=>`${n} card(s) point to a picture that is not in your library: ${list}.`,
+  pfLow:(list)=>`Too small for sharp printing (under 150 dpi at this card size): ${list}. Use a bigger file.`,
+  pfBlur:(list)=>`Will print blurry (under 100 dpi): ${list}. Use a bigger file.`,
+  libLow:d=>`Low resolution: about ${d} dpi at the size it is printed`,
   libT:"Your images", libHint:"Put here every picture the deck will use: drop files or tap +. Then, in \"Edit this card\", pick the front picture and the back picture from this library. A file named like a card (dragon.png for the card \"Dragon\") also attaches itself to the front.", libAdd:"Add", libEmpty:"No images yet. Drop pictures here or tap +.", libRemove:"Remove from library", libGone:n=>`Removed ${n}`,
   pickT:"Choose a picture", pickUp:"Upload new…", pickNone:"No picture", pickClose:"Close", edFront:"Front picture", edBack:"Back picture", edBackSame:"Same back as the whole deck", newBackImgCol:"back image",
   fitT:"Back picture", fitLogo:"Centred, like a logo", fitCover:"Full card", backHint:"The same picture on every back. For a different back on each card, open \"Edit this card\" and pick one per card.", splitT:"Drag to resize the panel",
@@ -282,6 +298,14 @@ const T = {
  it:{tagline:"Crea il tuo mazzo di carte e stampalo a casa", tabs:["Dati","Formato","Fronte","Retro","Stampa"],
   h1:"Le tue carte", l1:"Una riga = una carta. Incolla da Excel o Google Sheets, con i nomi delle colonne nella prima riga.", loadCsv:"Carica CSV", sample:"Mazzo di esempio", rows:n=>`${n} carte`, cols:"Colonne trovate",
   imgs:"Immagini", imgsHint:"Trascina qui le immagini o tocca per sceglierle. Un file con il nome di una carta (drago.png per la carta \"Drago\") si collega da solo. Oppure usa \"Modifica questa carta\" sopra l'anteprima per sceglierla carta per carta.", qty:"Oppure prendi le copie da una colonna",copiesAll:"Copie di ogni carta", copiesHint:"Quante volte viene stampata ogni carta. Per una carta sola apri \"Modifica questa carta\" e cambia le sue Copie.", edCopies:"Copie di questa carta",
+  undoT:"Annulla (Ctrl+Z)", redoT:"Ripeti (Ctrl+Y)", undone:"Annullato.", redone:"Ripetuto.",
+  pfT:"Controllo prima di stampare", pfNoCards:"Non ci sono ancora carte da stampare.", pfOk:"Tutto a posto: tutto entra nel foglio e le immagini sono abbastanza nitide.",
+  pfNoFit:(w,h,pg)=>`Una carta di ${w}×${h} mm (abbondanza inclusa) non entra nel foglio ${pg}. Scegli un foglio più grande, oppure riduci l'abbondanza o la misura della carta.`,
+  pfSheets:(n,per,sh)=>`${n} carte · ${per} per foglio · ${sh} fogli`,
+  pfMissing:(n,list)=>`${n} carte indicano un'immagine che non è nella tua libreria: ${list}.`,
+  pfLow:(list)=>`Troppo piccole per una stampa nitida (sotto i 150 dpi a questa misura): ${list}. Usa un file più grande.`,
+  pfBlur:(list)=>`Si stamperanno sfocate (sotto i 100 dpi): ${list}. Usa un file più grande.`,
+  libLow:d=>`Bassa risoluzione: circa ${d} dpi alla misura di stampa`,
   libT:"Le tue immagini", libHint:"Metti qui tutte le immagini che useranno le carte: trascinale o tocca +. Poi, in \"Modifica questa carta\", scegli dalla libreria l'immagine del fronte e quella del retro. Un file con il nome di una carta (drago.png per la carta \"Drago\") si collega da solo al fronte.", libAdd:"Aggiungi", libEmpty:"Ancora nessuna immagine. Trascinale qui o tocca +.", libRemove:"Togli dalla libreria", libGone:n=>`Tolta ${n}`,
   pickT:"Scegli un'immagine", pickUp:"Carica nuove…", pickNone:"Nessuna immagine", pickClose:"Chiudi", edFront:"Immagine del fronte", edBack:"Immagine del retro", edBackSame:"Stesso retro di tutto il mazzo", newBackImgCol:"immagine retro",
   fitT:"Immagine del retro", fitLogo:"Centrata, come un logo", fitCover:"A tutta carta", backHint:"La stessa immagine su ogni retro. Per un retro diverso su ogni carta apri \"Modifica questa carta\" e sceglilo carta per carta.", splitT:"Trascina per ridimensionare il pannello",
@@ -342,7 +366,8 @@ const L = () => T[LANG];
 
 /* ---------- costanti ---------- */
 const SIZES = {poker:[63,88,"Poker"], bridge:[57,89,"Bridge"], tarot:[70,120,"Tarot"], euro:[59,92,"Euro"], mini:[44,68,"Mini Euro"], miniUS:[41,63,"Mini US"], square:[70,70,"Square"]};
-const PAGES = {A4:[210,297], Letter:[215.9,279.4]};
+const PAGES = {A3:[297,420], A4:[210,297], A5:[148,210], Letter:[215.9,279.4], Legal:[215.9,355.6], Tabloid:[279.4,431.8]};
+const pageOf = k => PAGES[k] || PAGES.A4;
 const FONTS = ["Fredoka","Oswald","Bitter","Alegreya","Bebas Neue","Atkinson Hyperlegible","Public Sans"];
 const PALETTE = ["#2F6FB0","#D9480F","#1F8A4C","#7048E8","#C92A2A","#0B7285","#E67700","#C2255C","#5C940D","#495057"];
 const SWATCH = ["#FFFFFF","#FBF6EA","#F1F3F5","#17171C","#2F6FB0","#C92A2A","#1F8A4C","#E67700","#7048E8","#C9A45C"];
@@ -396,6 +421,8 @@ const ICON = {
   test:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="6"/><path d="M12 2v20M2 12h20"/></svg>',
   prev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>',
   next:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>',
+  undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>',
+  redo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg>',
   info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>'
 };
 function parseTable(text){
@@ -565,7 +592,7 @@ function roundedPreview(c, pxPerMm, r){ // angoli arrotondati solo a schermo
 
 /* ---------- impaginazione ---------- */
 function layout(){
-  const [pw0,ph0]=PAGES[S.print.page], b=S.print.bleed, g=S.print.gap, cw=S.card.w+2*b, ch=S.card.h+2*b, m=5;
+  const [pw0,ph0]=pageOf(S.print.page), b=S.print.bleed, g=S.print.gap, cw=S.card.w+2*b, ch=S.card.h+2*b, m=5;
   const fit=(pw,ph)=>{ const cols=Math.floor((pw-2*m+g)/(cw+g)), rows=Math.floor((ph-2*m+g)/(ch+g)); return {cols,rows,n:Math.max(0,cols)*Math.max(0,rows),pw,ph}; };
   const p=fit(pw0,ph0), l=fit(ph0,pw0), best = l.n>p.n ? {...l} : {...p};
   best.cw=cw; best.ch=ch; best.x0=(best.pw-(best.cols*cw+(best.cols-1)*g))/2; best.y0=(best.ph-(best.rows*ch+(best.rows-1)*g))/2;
@@ -594,6 +621,70 @@ function cropMarks(draw, lo){
   ys.forEach(y=>{ draw(gx0-off-len, y, gx0-off, y); draw(gx1+off, y, gx1+off+len, y); });
 }
 
+/* ---------- controllo prima di stampare ---------- */
+function imgUsage(){
+  const out={}, W=S.card.w, H=S.card.h, b=S.print.bleed, pad=3.4, rows=[...new Set(deck())];
+  const note=(name,wmm,hmm,fit)=>{ const k=imgKey(name); if(!k) return; const im=getImage(k); if(!im||!im.width) return;
+    const r=fit==="contain"?Math.min(wmm/im.width,hmm/im.height):Math.max(wmm/im.width,hmm/im.height); const dpi=25.4/r; if(!(k in out)||dpi<out[k]) out[k]=dpi; };
+  rows.forEach(ri=>{ const row=S.data.rows[ri]; if(!row) return;
+    if(S.front.image.field) note(val(row,S.front.image.field), W-2*pad, (H-2*pad)*S.front.image.h/100, "cover");
+    if(S.back.mode==="uniform"){
+      const own=S.back.imgCol?String(val(row,S.back.imgCol)||"").trim():"", hasText=!!S.back.text;
+      const nm=own||S.back.logoKey; if(!nm) return;
+      if(S.back.imgFit==="cover") note(nm, W+2*b, H+2*b, "cover"); else note(nm, W*0.62, hasText?H*0.42:H*0.6, "contain");
+    } else if(S.back.image.field) note(val(row,S.back.image.field), W-2*pad, (H-2*pad)*S.back.image.h/100, "cover");
+  });
+  return out;
+}
+function preflight(){
+  const l=L(), items=[], n=S.data.rows.length;
+  if(!n){ items.push({t:"warn", m:l.pfNoCards}); return items; }
+  const lo=layout(), b=S.print.bleed;
+  if(lo.n<1){ items.push({t:"err", m:l.pfNoFit(+(S.card.w+2*b).toFixed(1), +(S.card.h+2*b).toFixed(1), S.print.page)}); return items; }
+  const d=deck(); items.push({t:"info", m:l.pfSheets(d.length, lo.n, Math.ceil(d.length/lo.n))});
+  const used=[...new Set(d)], cols=[S.front.image.field, S.back.mode==="uniform"?S.back.imgCol:S.back.image.field].filter((c,i,x)=>c && colIdx(c)>=0 && x.indexOf(c)===i), miss=new Set(); let missRows=0;
+  used.forEach(ri=>{ let hit=false; cols.forEach(c=>{ const v=String(val(S.data.rows[ri],c)||"").trim(); if(v && !imgKey(v)){ miss.add(v); hit=true; } }); if(hit) missRows++; });
+  if(missRows) items.push({t:"warn", m:l.pfMissing(missRows, [...miss].slice(0,6).join(", ")+(miss.size>6?"…":""))});
+  const u=imgUsage(), nm=k=>`${k.replace(/\.[a-z0-9]+$/,"")} (${Math.round(u[k])} dpi)`;
+  const blur=Object.keys(u).filter(k=>u[k]<100), low=Object.keys(u).filter(k=>u[k]>=100&&u[k]<150);
+  if(blur.length) items.push({t:"err2", m:l.pfBlur(blur.slice(0,6).map(nm).join(", ")+(blur.length>6?"…":""))});
+  if(low.length) items.push({t:"warn", m:l.pfLow(low.slice(0,6).map(nm).join(", ")+(low.length>6?"…":""))});
+  if(!items.some(i=>i.t==="warn"||i.t==="err"||i.t==="err2")) items.push({t:"ok", m:l.pfOk});
+  return items;
+}
+function renderPreflight(){
+  const ul=$("#pf"); const items=preflight();
+  if(ul){ const G={err:"✕",err2:"⚠",warn:"⚠",ok:"✓",info:"ℹ"}; ul.innerHTML=items.map(i=>`<li class="${i.t==="err2"?"err":i.t}"><b aria-hidden="true">${G[i.t]}</b><span>${esc(i.m)}</span></li>`).join(""); }
+  const u=imgUsage();
+  document.querySelectorAll(".libi[data-img]").forEach(el=>{ const k=el.dataset.img, d=u[k], old=el.querySelector(".libw");
+    if(d!==undefined && d<150){ if(!old){ const w=document.createElement("b"); w.className="libw"; el.appendChild(w); } const w=el.querySelector(".libw"); w.textContent="⚠ "+Math.round(d)+" dpi"; w.title=L().libLow(Math.round(d)); }
+    else if(old) old.remove(); });
+  return items;
+}
+
+/* ---------- annulla / ripeti ---------- */
+const hist={undo:[], redo:[], cur:null, curFp:"", t:0};
+function histSnap(){ return {raw:S.data.raw, images:Object.assign({},S.images), card:JSON.stringify(S.card), front:JSON.stringify(S.front), back:JSON.stringify(S.back), print:JSON.stringify(S.print)}; }
+function histFp(sn){ return sn.raw+"\u0001"+sn.card+sn.front+sn.back+sn.print+"\u0001"+Object.keys(sn.images).map(k=>k+":"+sn.images[k].length).join(","); }
+function histUI(){ const u=$("#bUndo"), r=$("#bRedo"); if(!u||!r) return; u.innerHTML=ICON.undo; r.innerHTML=ICON.redo; u.title=L().undoT; r.title=L().redoT; u.setAttribute("aria-label",L().undoT); r.setAttribute("aria-label",L().redoT); u.disabled=!hist.undo.length; r.disabled=!hist.redo.length; }
+function histReset(){ hist.undo=[]; hist.redo=[]; hist.cur=histSnap(); hist.curFp=histFp(hist.cur); hist.t=0; histUI(); }
+function histWatch(){
+  if(!hist.cur){ histReset(); return; }
+  const sn=histSnap(), fp=histFp(sn); if(fp===hist.curFp) return;
+  const now=Date.now();
+  if(now-hist.t>700){ hist.undo.push(hist.cur); if(hist.undo.length>60) hist.undo.shift(); }
+  hist.cur=sn; hist.curFp=fp; hist.t=now; hist.redo=[]; histUI();
+}
+function histApply(sn){
+  const old=S.images; S.images=Object.assign({},sn.images);
+  new Set([...Object.keys(old),...Object.keys(S.images)]).forEach(k=>{ if(old[k]!==S.images[k]) delete imgCache[k]; });
+  S.data.raw=sn.raw; Object.assign(S.data, parseTable(sn.raw));
+  S.card=JSON.parse(sn.card); S.front=JSON.parse(sn.front); S.back=JSON.parse(sn.back); S.print=JSON.parse(sn.print);
+  hist.cur=sn; hist.curFp=histFp(sn); hist.t=0; histUI(); buildPanel(); scheduleRender();
+}
+function doUndo(){ histWatch(); if(!hist.undo.length) return; hist.redo.push(hist.cur); histApply(hist.undo.pop()); toast(L().undone); }
+function doRedo(){ if(!hist.redo.length) return; hist.undo.push(hist.cur); histApply(hist.redo.pop()); toast(L().redone); }
+
 /* ---------- anteprima ---------- */
 let sheetSide="front", renderTimer=null;
 function scheduleRender(){ clearTimeout(renderTimer); renderTimer=setTimeout(renderView, 110); }
@@ -604,7 +695,7 @@ if(document.fonts) document.fonts.addEventListener("loadingdone", ()=>{ clearTim
 async function renderView(){
   await fontsReady();
   const v=$("#view"), n=S.data.rows.length, lo=layout(), d=deck(), l=L();
-  syncEditor();
+  syncEditor(); histWatch(); renderPreflight();
   $("#stat").textContent = n ? l.stat(d.length, lo.n, Math.ceil(d.length/Math.max(1,lo.n))) : "";
   document.querySelectorAll("#viewSeg button").forEach(b=>{ b.textContent=l[b.dataset.v]; b.setAttribute("aria-pressed", S.view===b.dataset.v); });
   if(!n){ v.innerHTML=`<div class="empty"><p>${esc(l.empty)}</p></div>`; return; }
@@ -642,6 +733,7 @@ let exporting=false;
 async function exportPDF(test=false){
   if(exporting) return; if(!window.jspdf){ toast("PDF library not loaded"); return; }
   if(!S.data.rows.length && !test){ toast(L().empty); return; }
+  { const bad=preflight().find(i=>i.t==="err"); if(bad){ toast(bad.m); if(S.tab!==4){ S.tab=4; buildPanel(); scheduleRender(); } return; } }
   exporting=true; document.querySelectorAll(".js-export").forEach(b=>b.disabled=true); const bar=$("#prog i"); if($("#prog")) $("#prog").hidden=false;
   try{
     await fontsReady();
@@ -741,7 +833,7 @@ function looksUI(name, sd){
 }
 function libHTML(){
   const l=L(), names=Object.keys(S.images);
-  return `<div class="lib" id="lib">${names.map(k=>`<div class="libi" title="${esc(k)}"><img alt="" src="${S.images[k]}"><button type="button" class="libx" data-rmimg="${esc(k)}" aria-label="${esc(l.libRemove)}">×</button><span>${esc(k.replace(/\.[a-z0-9]+$/,""))}</span></div>`).join("")}<button type="button" class="libadd" id="bLibAdd" aria-label="${esc(l.libAdd)}">+<small>${esc(l.libAdd)}</small></button></div>${names.length?"":`<p class="hint">${esc(l.libEmpty)}</p>`}`;
+  return `<div class="lib" id="lib">${names.map(k=>`<div class="libi" data-img="${esc(k)}" title="${esc(k)}"><img alt="" src="${S.images[k]}"><button type="button" class="libx" data-rmimg="${esc(k)}" aria-label="${esc(l.libRemove)}">×</button><span>${esc(k.replace(/\.[a-z0-9]+$/,""))}</span></div>`).join("")}<button type="button" class="libadd" id="bLibAdd" aria-label="${esc(l.libAdd)}">+<small>${esc(l.libAdd)}</small></button></div>${names.length?"":`<p class="hint">${esc(l.libEmpty)}</p>`}`;
 }
 function paneHTML(){
   const l=L(), P=S.print, lo=layout(), imgNames=Object.keys(S.images);
@@ -768,12 +860,13 @@ function paneHTML(){
        ${seg("back.imgFit", S.back.imgFit||"contain", [["contain",l.fitLogo],["cover",l.fitCover]], true)}<p class="hint">${esc(l.backHint)}</p></div></div>`
      : looksUI("back", S.back)}`;
    case 4: return `<h2>${l.h5}</h2><p class="lead">${esc(l.l5)}</p>
-     <div class="row"><label class="f">${l.page}${seg("print.page", P.page, [["A4","A4"],["Letter","Letter"]], true)}</label><label class="f">${l.dpi}${seg("print.dpi", P.dpi, [[200,"200 dpi"],[300,"300 dpi"]], true)}</label></div>
+     <div class="row"><div class="f"><span>${l.page}</span><select aria-label="${l.page}" data-k="print.page">${Object.entries(PAGES).map(([k,[w,h]])=>`<option value="${k}" ${P.page===k?"selected":""}>${k} · ${Math.round(w)}×${Math.round(h)} mm</option>`).join("")}</select></div><label class="f">${l.dpi}${seg("print.dpi", P.dpi, [[200,"200 dpi"],[300,"300 dpi"]], true)}</label></div>
      <div class="row"><label class="f">${l.bleed}<input type="number" min="0" max="5" step="0.5" data-k="print.bleed" value="${P.bleed}"></label><label class="f">${l.gap}<input type="number" min="0" max="10" step="0.5" data-k="print.gap" value="${P.gap}"></label></div>
      <label class="chk"><input type="checkbox" data-k="print.crop" ${P.crop?"checked":""}> ${l.crop}</label>
      <label class="f">${l.duplex}${seg("print.duplex", P.duplex, [["none",l.dNone],["long",l.dLong],["short",l.dShort]], true)}</label>
      ${P.duplex!=="none"?`<div class="f"><label for="in_offX">${l.offset} · ${l.offX}</label>${nudge("print.offX",P.offX)}</div><div class="f"><label for="in_offY">${l.offset} · ${l.offY}</label>${nudge("print.offY",P.offY)}</div>
        <div class="adv"><b class="advt">${l.scaleT}</b><p class="hint">${l.scaleHint}</p><div class="f"><label for="in_scX">${l.scaleX}</label>${nudge("print.scX",P.scX||0,0.1,0.01,2)}</div><div class="f"><label for="in_scY">${l.scaleY}</label>${nudge("print.scY",P.scY||0,0.1,0.01,2)}</div></div>`:""}
+     <div class="group"><span class="glabel">${l.pfT}</span><ul class="pf" id="pf" aria-live="polite"></ul></div>
      <div class="info">${ICON.info}<span>${esc(l.preflight)}</span></div>
      <div class="prog" id="prog" hidden><i></i></div>
      <button class="btn primary js-export" id="bExport" style="justify-content:center;padding:12px">${ICON.pdf}${l.export}</button>
@@ -787,7 +880,7 @@ function buildPanel(){
   $("#bLoadP").innerHTML=ICON.open+esc(l.loadP); $("#bSaveP").innerHTML=ICON.save+esc(l.saveP); $("#bExportTop").innerHTML=ICON.pdf+esc(l.export); $("#bExportTop").classList.add("js-export"); refreshProUI();
   $("#tabs").innerHTML = l.tabs.map((t,i)=>`<button class="tab" role="tab" data-tab="${i}" title="${esc(t)}" aria-label="${esc(t)}" aria-selected="${S.tab===i}"><span class="n">${i+1}</span><span class="l">${esc(t)}</span></button>`).join("");
   $("#pane").innerHTML = paneHTML();
-  bindPanel(); drawThemePreviews();
+  bindPanel(); drawThemePreviews(); histUI(); renderPreflight();
 }
 async function drawThemePreviews(){
   const tiles=document.querySelectorAll("canvas[data-tprev]"); if(!tiles.length || !S.data.rows.length) return;
@@ -1017,7 +1110,7 @@ $("#fImgs").onchange=async e=>{ await addImages(e.target.files); e.target.value=
 $("#fBackImg").onchange=async e=>{ const f=e.target.files[0]; if(f){ const ks=await addImages([f], true); if(ks[0]){ S.back.logoKey=ks[0]; S.back.logo=null; } buildPanel(); setTimeout(scheduleRender,150); } e.target.value=""; };
 $("#fProject").onchange=async e=>{ const f=e.target.files[0]; if(f){ try{ loadProject(JSON.parse(await readFile(f,true))); }catch(err){ toast("?"); } } e.target.value=""; };
 document.querySelectorAll("#viewSeg button").forEach(b=>b.onclick=()=>{ S.view=b.dataset.v; scheduleRender(); });
-$("#bSaveP").onclick=saveProject; $("#bLoadP").onclick=()=>$("#fProject").click(); $("#bExportTop").onclick=()=>exportPDF(false);
+$("#bUndo").onclick=doUndo; $("#bRedo").onclick=doRedo; $("#bSaveP").onclick=saveProject; $("#bLoadP").onclick=()=>$("#fProject").click(); $("#bExportTop").onclick=()=>exportPDF(false);
 const setLang=g=>{ LANG=g; try{ localStorage.setItem("cp-lang",g); }catch(e){} buildPanel(); scheduleRender(); };
 $("#lEN").onclick=()=>setLang("en"); $("#lIT").onclick=()=>setLang("it");
 $("#bPro").onclick=async()=>{ const c=await askPro(0); if(c==="buy") await buyPro(); };
@@ -1026,10 +1119,12 @@ if("launchQueue" in window) window.launchQueue.setConsumer(async p=>{ for(const 
   if(/\.(deckprint|cardpress|json)$/i.test(f.name)) loadProject(JSON.parse(txt)); else setData(txt); }catch(e){ toast("?"); } } });
 if(EDITION==="store" && "serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) { const had=!!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(had && !window.__swr){ window.__swr=1; location.reload(); } }); navigator.serviceWorker.register("sw.js").then(r=>{ try{ r.update(); }catch(e){} }).catch(()=>{}); }
 checkPro();
-document.addEventListener("keydown", e=>{ if(e.target.matches("input,textarea,select")) return; const n=S.data.rows.length; if(!n||S.view==="sheet") return; if(e.key==="ArrowRight"){ S.sel=(S.sel+1)%n; scheduleRender(); } if(e.key==="ArrowLeft"){ S.sel=(S.sel-1+n)%n; scheduleRender(); } });
+document.addEventListener("keydown", e=>{ if((e.ctrlKey||e.metaKey) && !e.altKey && !e.target.matches("input,textarea,select,[contenteditable]")){ const k=e.key.toLowerCase(); if(k==="z"&&!e.shiftKey){ e.preventDefault(); doUndo(); return; } if(k==="y"||(k==="z"&&e.shiftKey)){ e.preventDefault(); doRedo(); return; } }
+  if(e.target.matches("input,textarea,select")) return; const n=S.data.rows.length; if(!n||S.view==="sheet") return; if(e.key==="ArrowRight"){ S.sel=(S.sel+1)%n; scheduleRender(); } if(e.key==="ArrowLeft"){ S.sel=(S.sel-1+n)%n; scheduleRender(); } });
 
 /* avvio con il mazzo di esempio, così si vede subito cosa fa */
 setData(SAMPLE[LANG]);
+setTimeout(histReset, 600);
 </script>
 
 </body>
