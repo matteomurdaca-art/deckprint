@@ -339,6 +339,7 @@ const PRO_LINK = "https://apps.microsoft.com/detail/9NNPGDKT2R4V";              
 const FREE_SHEETS = 2;
 let PRO = EDITION !== "store";
 let proPrice = "";
+let HAS_STORE = false, STORE_CHECKED = false;
 try{ if(EDITION==="store" && localStorage.getItem("cp-pro")==="1") PRO = true; }catch(e){}
 async function storeService(){
   if(!("getDigitalGoodsService" in window)) return null;
@@ -347,7 +348,7 @@ async function storeService(){
 function setPro(v){ PRO=v; try{ localStorage.setItem("cp-pro", v?"1":"0"); }catch(e){} refreshProUI(); }
 async function checkPro(){
   if(EDITION!=="store") return;
-  const svc = await storeService(); if(!svc) return;
+  const svc = await storeService(); HAS_STORE = !!svc; STORE_CHECKED = true; refreshGetApp(); if(!svc) return;
   try{ const list = await svc.listPurchases(); if(list.some(p=>p.itemId===PRO_SKU)) setPro(true); }catch(e){}
   try{ const [d] = await svc.getDetails([PRO_SKU]); if(d && d.price) proPrice = new Intl.NumberFormat(LANG, {style:"currency", currency:d.price.currency}).format(d.price.value); }catch(e){}
 }
@@ -360,12 +361,14 @@ async function buyPro(){
   }catch(e){}
   await checkPro(); if(PRO) toast(L().proThanks); return PRO;
 }
+function refreshGetApp(){ const ga=$("#getApp"); if(!ga) return; const l=L(); ga.hidden = !STORE_CHECKED || HAS_STORE || PRO_LINK.startsWith("/*"); $("#getAppT").textContent=l.getApp; const a=$("#getAppA"); a.textContent=l.getAppLink; a.href=PRO_LINK; }
+setTimeout(()=>{ if(!STORE_CHECKED){ STORE_CHECKED=true; refreshGetApp(); } }, 3000);
 function refreshProUI(){ const b=$("#bPro"); if(!b) return; b.hidden = PRO || EDITION!=="store"; b.textContent = "★ " + L().getPro; }
 function askPro(sheets){
   const l=L(), d=$("#proDlg"); if(!d || !d.showModal) return Promise.resolve(confirm(l.proLimit(sheets))?"free":"later");
   $("#proT").textContent=l.proT; $("#proP").textContent = sheets ? l.proLimit(sheets)+" "+l.proLead.split(". ").pop() : l.proLead;
   $("#proL").innerHTML=l.proItems.map(x=>`<li>${esc(x)}</li>`).join(""); $("#proPrice").textContent = proPrice ? l.proPrice(proPrice) : "";
-  $("#proFree").textContent=l.proFree; $("#proFree").hidden=!sheets; $("#proLater").textContent=l.proLater; $("#proBuy").textContent=("getDigitalGoodsService" in window)?l.proBuy:l.proBuyWeb;
+  $("#proFree").textContent=l.proFree; $("#proFree").hidden=!sheets; $("#proLater").textContent=l.proLater; $("#proBuy").textContent=HAS_STORE?l.proBuy:l.proBuyWeb;
   return new Promise(res=>{ d.onclose=()=>res(d.returnValue||"later"); d.returnValue=""; d.showModal(); });
 }
 const L = () => T[LANG];
@@ -882,7 +885,7 @@ function paneHTML(){
 }
 function buildPanel(){
   const l=L();
-  $("#tagline").textContent=l.tagline; { const ga=$("#getApp"); if(ga){ ga.hidden=("getDigitalGoodsService" in window)||PRO_LINK.startsWith("/*"); $("#getAppT").textContent=l.getApp; const a=$("#getAppA"); a.textContent=l.getAppLink; a.href=PRO_LINK; } } document.documentElement.lang=LANG;
+  $("#tagline").textContent=l.tagline; refreshGetApp(); document.documentElement.lang=LANG;
   $("#lEN").setAttribute("aria-pressed",LANG==="en"); $("#lIT").setAttribute("aria-pressed",LANG==="it");
   $("#bLoadP").innerHTML=ICON.open+esc(l.loadP); $("#bSaveP").innerHTML=ICON.save+esc(l.saveP); $("#bExportTop").innerHTML=ICON.pdf+esc(l.export); $("#bExportTop").classList.add("js-export"); refreshProUI();
   $("#tabs").innerHTML = l.tabs.map((t,i)=>`<button class="tab" role="tab" data-tab="${i}" title="${esc(t)}" aria-label="${esc(t)}" aria-selected="${S.tab===i}"><span class="n">${i+1}</span><span class="l">${esc(t)}</span></button>`).join("");
