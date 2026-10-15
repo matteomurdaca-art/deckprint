@@ -191,6 +191,9 @@ textarea{min-height:130px;font-family:var(--f-mono);font-size:.76rem;resize:vert
 #proDlg ul{margin:0 0 12px;padding-left:20px;line-height:1.6}
 #proDlg .price{color:var(--ink);font-weight:700}
 .dlg-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.getapp{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:center;text-align:center;padding:12px 14px;border-radius:12px;background:var(--soft);border:1.5px solid var(--ink);font-size:.92rem;line-height:1.4}
+.getapp[hidden]{display:none}
+.getapp a{font-weight:700;color:var(--ink)}
 /* libreria immagini */
 .lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:9px;border:1.5px dashed var(--rule);border-radius:11px;padding:9px;background:var(--field);max-height:250px;overflow:auto}
 .lib.over{border-color:var(--cyan)}
@@ -249,6 +252,7 @@ textarea{min-height:130px;font-family:var(--f-mono);font-size:.76rem;resize:vert
       <div class="mat" id="view"></div>
     </div>
   </div>
+  <div class="getapp" id="getApp" hidden><span id="getAppT"></span><a id="getAppA" target="_blank" rel="noopener"></a></div>
 </div>
 <div class="toast" id="toast" hidden></div>
 <dialog id="proDlg"><form method="dialog"><h3 id="proT"></h3><p id="proP"></p><ul id="proL"></ul><p class="price" id="proPrice"></p>
@@ -295,7 +299,7 @@ const T = {
   overlay:"Overlaid", overlayHint:"Blue = front, pink = back with your offset and scale. If the outlines coincide, the settings are right.", scaleT:"Advanced: back scale (fine tuning)", scaleX:"Back scale · width %", scaleY:"Back scale · height %", scaleHint:"If the back lines up at the top but drifts toward the bottom (or the right), the printer is stretching or shrinking the page. Use the alignment test: if the back ends up bigger than the front, enter a negative value (e.g. -0.15); if smaller, a positive one. 0.1 % ≈ 0.2 mm on A4.", offset:"Back offset (printer correction)", offX:"X mm", offY:"Y mm", dpi:"Quality", export:"Export PDF", test:"Alignment test page", exporting:"Rendering…",
   saveP:"Save", loadP:"Open", saved:"Project saved.", loaded:"Project loaded.",
   front:"Front", back:"Back", sheet:"Press sheet", stat:(c,p,s)=>`${c} cards · ${p}/sheet · ${s} ${s===1?"sheet":"sheets"}`, empty:"Paste your card data or load the sample deck to start.", cardN:(i,n)=>`Card ${i} of ${n}`,
-  dlFail:"The download didn't start. Try again.", getPro:"Pro", proT:"Deck Print Pro", proLead:"The free version exports up to 2 sheets per PDF. With Pro:", proLimit:n=>`This deck takes ${n} sheets. The free version exports 2.`, proItems:["Decks of any length","No footer line on the pages","One purchase, yours forever"], proBuy:"Get Pro", proLater:"Not now", proFree:"Export the first 2 sheets", proPrice:p=>`Price: ${p}, one time.`, freeFooter:"Made with Deck Print · free version", proThanks:"Thank you! Pro is active.", proNA:"Pro is purchased in the app installed from Microsoft Store.", done:"PDF ready.", preflight:"Print at 100% (actual size), not 'fit to page'. Print the alignment test first."},
+  dlFail:"The download didn't start. Try again.", getPro:"Pro", getApp:"Free in your browser. Get the Windows app and unlock Pro with a one-time purchase.", getAppLink:"Get it on Microsoft Store", proBuyWeb:"Get Pro on Microsoft Store", proT:"Deck Print Pro", proLead:"The free version exports up to 2 sheets per PDF. With Pro:", proLimit:n=>`This deck takes ${n} sheets. The free version exports 2.`, proItems:["Decks of any length","No footer line on the pages","One purchase, yours forever"], proBuy:"Get Pro", proLater:"Not now", proFree:"Export the first 2 sheets", proPrice:p=>`Price: ${p}, one time.`, freeFooter:"Made with Deck Print · free version", proThanks:"Thank you! Pro is active.", proNA:"Pro is purchased in the app installed from Microsoft Store.", done:"PDF ready.", preflight:"Print at 100% (actual size), not 'fit to page'. Print the alignment test first."},
  it:{tagline:"Crea il tuo mazzo di carte e stampalo a casa", tabs:["Dati","Formato","Fronte","Retro","Stampa"],
   h1:"Le tue carte", l1:"Una riga = una carta. Incolla da Excel o Google Sheets, con i nomi delle colonne nella prima riga.", loadCsv:"Carica CSV", sample:"Mazzo di esempio", rows:n=>`${n} carte`, cols:"Colonne trovate",
   imgs:"Immagini", imgsHint:"Trascina qui le immagini o tocca per sceglierle. Un file con il nome di una carta (drago.png per la carta \"Drago\") si collega da solo. Oppure usa \"Modifica questa carta\" sopra l'anteprima per sceglierla carta per carta.", qty:"Oppure prendi le copie da una colonna",copiesAll:"Copie di ogni carta", copiesHint:"Quante volte viene stampata ogni carta. Per una carta sola apri \"Modifica questa carta\" e cambia le sue Copie.", edCopies:"Copie di questa carta",
@@ -323,7 +327,7 @@ const T = {
   overlay:"Sovrapposti", overlayHint:"Blu = fronte, rosa = retro con spostamento e scala. Se i contorni coincidono, le impostazioni sono giuste.", scaleT:"Avanzate: scala del retro (taratura fine)", scaleX:"Scala retro · larghezza %", scaleY:"Scala retro · altezza %", scaleHint:"Se il retro combacia in alto ma si sposta via via verso il basso (o verso destra), la stampante sta allungando o accorciando il foglio. Con la pagina di prova: se il retro risulta più grande del fronte metti un valore negativo (es. -0,15); se più piccolo, uno positivo. 0,1 % ≈ 0,2 mm su A4.", offset:"Spostamento retro (correzione stampante)", offX:"X mm", offY:"Y mm", dpi:"Qualità", export:"Esporta PDF", test:"Pagina di prova allineamento", exporting:"Preparo…",
   saveP:"Salva", loadP:"Apri", saved:"Progetto salvato.", loaded:"Progetto caricato.",
   front:"Fronte", back:"Retro", sheet:"Foglio di stampa", stat:(c,p,s)=>`${c} carte · ${p}/foglio · ${s} ${s===1?"foglio":"fogli"}`, empty:"Incolla i dati delle tue carte o carica il mazzo di esempio per iniziare.", cardN:(i,n)=>`Carta ${i} di ${n}`,
-  dlFail:"Lo scaricamento non è partito. Riprova.", getPro:"Pro", proT:"Deck Print Pro", proLead:"La versione gratuita esporta fino a 2 fogli per PDF. Con Pro:", proLimit:n=>`Questo mazzo occupa ${n} fogli. La versione gratuita ne esporta 2.`, proItems:["Mazzi di qualsiasi lunghezza","Nessuna scritta a piè di pagina","Un solo acquisto, per sempre"], proBuy:"Passa a Pro", proLater:"Non ora", proFree:"Esporta i primi 2 fogli", proPrice:p=>`Prezzo: ${p}, una volta sola.`, freeFooter:"Creato con Deck Print · versione gratuita", proThanks:"Grazie! Pro è attivo.", proNA:"L'acquisto di Pro si fa dall'app installata da Microsoft Store.", done:"PDF pronto.", preflight:"Stampa al 100% (dimensioni reali), non 'adatta alla pagina'. Prima stampa la pagina di prova."}
+  dlFail:"Lo scaricamento non è partito. Riprova.", getPro:"Pro", getApp:"Gratis dal browser. Prendi l'app per Windows e sblocca Pro con un solo acquisto.", getAppLink:"Scaricala dal Microsoft Store", proBuyWeb:"Passa a Pro su Microsoft Store", proT:"Deck Print Pro", proLead:"La versione gratuita esporta fino a 2 fogli per PDF. Con Pro:", proLimit:n=>`Questo mazzo occupa ${n} fogli. La versione gratuita ne esporta 2.`, proItems:["Mazzi di qualsiasi lunghezza","Nessuna scritta a piè di pagina","Un solo acquisto, per sempre"], proBuy:"Passa a Pro", proLater:"Non ora", proFree:"Esporta i primi 2 fogli", proPrice:p=>`Prezzo: ${p}, una volta sola.`, freeFooter:"Creato con Deck Print · versione gratuita", proThanks:"Grazie! Pro è attivo.", proNA:"L'acquisto di Pro si fa dall'app installata da Microsoft Store.", done:"PDF pronto.", preflight:"Stampa al 100% (dimensioni reali), non 'adatta alla pagina'. Prima stampa la pagina di prova."}
 };
 let LANG = (()=>{ try{ const s=localStorage.getItem("cp-lang"); if(s) return s; }catch(e){} return /^it/i.test(navigator.language||"")?"it":"en"; })();
 
@@ -331,7 +335,7 @@ let LANG = (()=>{ try{ const s=localStorage.getItem("cp-lang"); if(s) return s; 
    artifact / full: tutto sbloccato. store: gratis con limite, Pro come componente aggiuntivo durevole su Microsoft Store. */
 const EDITION = "store";
 const PRO_SKU = "deckprint_pro";              // ID prodotto del componente aggiuntivo in Partner Center
-const PRO_LINK = "/*PROLINK*/";                // pagina dello Store (dopo la prenotazione del nome)
+const PRO_LINK = "https://apps.microsoft.com/detail/9NNPGDKT2R4V";                // pagina dello Store (dopo la prenotazione del nome)
 const FREE_SHEETS = 2;
 let PRO = EDITION !== "store";
 let proPrice = "";
@@ -361,7 +365,7 @@ function askPro(sheets){
   const l=L(), d=$("#proDlg"); if(!d || !d.showModal) return Promise.resolve(confirm(l.proLimit(sheets))?"free":"later");
   $("#proT").textContent=l.proT; $("#proP").textContent = sheets ? l.proLimit(sheets)+" "+l.proLead.split(". ").pop() : l.proLead;
   $("#proL").innerHTML=l.proItems.map(x=>`<li>${esc(x)}</li>`).join(""); $("#proPrice").textContent = proPrice ? l.proPrice(proPrice) : "";
-  $("#proFree").textContent=l.proFree; $("#proFree").hidden=!sheets; $("#proLater").textContent=l.proLater; $("#proBuy").textContent=l.proBuy;
+  $("#proFree").textContent=l.proFree; $("#proFree").hidden=!sheets; $("#proLater").textContent=l.proLater; $("#proBuy").textContent=("getDigitalGoodsService" in window)?l.proBuy:l.proBuyWeb;
   return new Promise(res=>{ d.onclose=()=>res(d.returnValue||"later"); d.returnValue=""; d.showModal(); });
 }
 const L = () => T[LANG];
@@ -878,7 +882,7 @@ function paneHTML(){
 }
 function buildPanel(){
   const l=L();
-  $("#tagline").textContent=l.tagline; document.documentElement.lang=LANG;
+  $("#tagline").textContent=l.tagline; { const ga=$("#getApp"); if(ga){ ga.hidden=("getDigitalGoodsService" in window)||PRO_LINK.startsWith("/*"); $("#getAppT").textContent=l.getApp; const a=$("#getAppA"); a.textContent=l.getAppLink; a.href=PRO_LINK; } } document.documentElement.lang=LANG;
   $("#lEN").setAttribute("aria-pressed",LANG==="en"); $("#lIT").setAttribute("aria-pressed",LANG==="it");
   $("#bLoadP").innerHTML=ICON.open+esc(l.loadP); $("#bSaveP").innerHTML=ICON.save+esc(l.saveP); $("#bExportTop").innerHTML=ICON.pdf+esc(l.export); $("#bExportTop").classList.add("js-export"); refreshProUI();
   $("#tabs").innerHTML = l.tabs.map((t,i)=>`<button class="tab" role="tab" data-tab="${i}" title="${esc(t)}" aria-label="${esc(t)}" aria-selected="${S.tab===i}"><span class="n">${i+1}</span><span class="l">${esc(t)}</span></button>`).join("");
