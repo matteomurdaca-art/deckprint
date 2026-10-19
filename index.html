@@ -276,6 +276,7 @@ textarea{min-height:130px;font-family:var(--f-mono);font-size:.76rem;resize:vert
     <div class="actions">
       <span class="lang" role="group" aria-label="Language"><button id="lEN">EN</button><button id="lIT">IT</button></span>
       <span class="undo" role="group" style="display:inline-flex;gap:4px"><button class="btn ic" id="bUndo" type="button" disabled></button><button class="btn ic" id="bRedo" type="button" disabled></button></span>
+      <button class="btn" id="bMemoTop" type="button"></button>
       <button class="btn" id="bLoadP"></button>
       <button class="btn" id="bSaveP"></button>
       <button class="btn pro" id="bPro" hidden></button>
@@ -341,7 +342,7 @@ const T = {
   libLow:d=>`Low resolution: about ${d} dpi at the size it is printed`,
   libT:"Your images", libHint:"Put here every picture the deck will use: drop files or tap +. Then, in \"Edit this card\", pick the front picture and the back picture from this library. A file named like a card (dragon.png for the card \"Dragon\") also attaches itself to the front.", libAdd:"Add", libEmpty:"No images yet. Drop pictures here or tap +.", libRemove:"Remove from library", libGone:n=>`Removed ${n}`,
   pickT:"Choose a picture", pickUp:"Upload new…", pickNone:"No picture", pickClose:"Close", edFront:"Front picture", edBack:"Back picture", edBackSame:"Same back as the whole deck", newBackImgCol:"back image",
-  fitT:"Back picture", zoomT:"Size", zoomX:"Left / right", zoomY:"Up / down", zoomReset:"Reset size and position", fitLogo:"Centred, like a logo", fitCover:"Full card", backHint:"The same picture on every back. For a different back on each card, open \"Edit this card\" and pick one per card.", splitT:"Drag to resize the panel",
+  fitT:"Back picture", zoomEdT:"Back picture: size and position", zoomT:"Size", zoomX:"Left / right", zoomY:"Up / down", zoomReset:"Reset size and position", zoomAll:"Applies to the back of every card.", fitLogo:"Centred, like a logo", fitCover:"Full card", backHint:"The same picture on every back. For a different back on each card, open \"Edit this card\" and pick one per card.", splitT:"Drag to resize the panel",
   edT:"Edit this card", edDesc:"Change the text and picture of this card, add or delete cards", edOpenB:"Open", edCloseB:"Close", edNew:"+ New card", edDup:"Duplicate", edDel:"Delete", edSure:"Sure? Click again", edImg:"Picture", edPick:"Choose picture…", edChange:"Change picture…", edRemove:"Remove", edNone:"No picture", edFirst:"Create your first card here, add a picture from a JPG or PNG file, then add more cards. No spreadsheet needed.", imgBad:"Could not read this picture. Use JPG, PNG or WebP.", imgAuto:n=>`${n} picture(s) attached to cards by name`, edDropHint:"Tip: drop a picture on the card to set it.", newCat:"Fire", newTitle:"My Monster", newText:"Fire Breath: 30 damage. Flip a coin: if heads, double it.", newVal:"60", newImgCol:"Image", newCols:["Category","Title","Text","Value"],
   h2:"Card size", l2:"Pick a standard size or set your own.", custom:"Custom", w:"Width mm", h:"Height mm", content:"Content layout", pClassic:"Classic", pQuiz:"Text card", pPlay:"Playing card", pPhoto:"Photo card", photoHint:"The picture fills the whole card. Choose a column below if you also want a caption.", photoCap:"Caption", capPosT:"Caption position", capOver:"On the photo", capBelow:"Under the photo", capSzT:"Caption size", capSz:{s:"Small",m:"Medium",l:"Large"}, photoMake:"One card per picture", photoMakeHint:"Makes a full-photo card from every picture in your library that is not used yet. Good for memory games and photo decks.", photoMade:n=>`${n} card(s) created from your pictures`, photoDrop:"Or drop your pictures here to make a photo deck.", photoPick:"Choose pictures…", photoTitleCol:"Title",
   memBanT:"Memory game", memBanD:"Turn your photos into a memory game to print at home. Ready in a minute.", memBanB:"Make a memory", memBtnData:"Memory game…",
@@ -374,7 +375,7 @@ const T = {
   libLow:d=>`Bassa risoluzione: circa ${d} dpi alla misura di stampa`,
   libT:"Le tue immagini", libHint:"Metti qui tutte le immagini che useranno le carte: trascinale o tocca +. Poi, in \"Modifica questa carta\", scegli dalla libreria l'immagine del fronte e quella del retro. Un file con il nome di una carta (drago.png per la carta \"Drago\") si collega da solo al fronte.", libAdd:"Aggiungi", libEmpty:"Ancora nessuna immagine. Trascinale qui o tocca +.", libRemove:"Togli dalla libreria", libGone:n=>`Tolta ${n}`,
   pickT:"Scegli un'immagine", pickUp:"Carica nuove…", pickNone:"Nessuna immagine", pickClose:"Chiudi", edFront:"Immagine del fronte", edBack:"Immagine del retro", edBackSame:"Stesso retro di tutto il mazzo", newBackImgCol:"immagine retro",
-  fitT:"Immagine del retro", zoomT:"Grandezza", zoomX:"Sinistra / destra", zoomY:"Su / giù", zoomReset:"Reimposta grandezza e posizione", fitLogo:"Centrata, come un logo", fitCover:"A tutta carta", backHint:"La stessa immagine su ogni retro. Per un retro diverso su ogni carta apri \"Modifica questa carta\" e sceglilo carta per carta.", splitT:"Trascina per ridimensionare il pannello",
+  fitT:"Immagine del retro", zoomEdT:"Immagine del retro: grandezza e posizione", zoomT:"Grandezza", zoomX:"Sinistra / destra", zoomY:"Su / giù", zoomReset:"Reimposta grandezza e posizione", zoomAll:"Vale per il retro di tutte le carte.", fitLogo:"Centrata, come un logo", fitCover:"A tutta carta", backHint:"La stessa immagine su ogni retro. Per un retro diverso su ogni carta apri \"Modifica questa carta\" e sceglilo carta per carta.", splitT:"Trascina per ridimensionare il pannello",
   edT:"Modifica questa carta", edDesc:"Cambia testo e immagine della carta, aggiungi o elimina carte", edOpenB:"Apri", edCloseB:"Chiudi", edNew:"+ Nuova carta", edDup:"Duplica", edDel:"Elimina", edSure:"Sicuro? Clicca ancora", edImg:"Immagine", edPick:"Scegli immagine…", edChange:"Cambia immagine…", edRemove:"Togli", edNone:"Nessuna immagine", edFirst:"Crea qui la tua prima carta, aggiungi un'immagine da un file JPG o PNG, poi aggiungi altre carte. Non serve nessun foglio di calcolo.", imgBad:"Non riesco a leggere questa immagine. Usa JPG, PNG o WebP.", imgAuto:n=>`${n} immagine/i collegata/e alle carte dal nome`, edDropHint:"Consiglio: trascina un'immagine sulla carta per impostarla.", newCat:"Fuoco", newTitle:"Il mio mostro", newText:"Soffio di fuoco: 30 danni. Lancia una moneta: se esce testa, raddoppia.", newVal:"60", newImgCol:"Immagine", newCols:["Categoria","Titolo","Testo","Valore"],
   h2:"Formato della carta", l2:"Scegli un formato standard o imposta le tue misure.", custom:"Personalizzato", w:"Larghezza mm", h:"Altezza mm", content:"Impaginazione del contenuto", pClassic:"Classica", pQuiz:"Carta di testo", pPlay:"Carta da gioco", pPhoto:"Carta foto", photoHint:"L'immagine riempie tutta la carta. Se vuoi anche una didascalia, scegli una colonna qui sotto.", photoCap:"Didascalia", capPosT:"Posizione della scritta", capOver:"Sopra la foto", capBelow:"Sotto la foto", capSzT:"Grandezza della scritta", capSz:{s:"Piccola",m:"Media",l:"Grande"}, photoMake:"Una carta per ogni immagine", photoMakeHint:"Crea una carta a tutta foto per ogni immagine della libreria non ancora usata. Ideale per memory e mazzi di foto.", photoMade:n=>`${n} carta/e create dalle tue immagini`, photoDrop:"Oppure trascina qui le tue immagini per fare un mazzo di foto.", photoPick:"Scegli immagini…", photoTitleCol:"Titolo",
   memBanT:"Gioco Memory", memBanD:"Trasforma le tue foto in un memory da stampare a casa. Pronto in un minuto.", memBanB:"Crea il memory", memBtnData:"Gioco Memory…",
@@ -977,7 +978,7 @@ function buildPanel(){
   const l=L();
   $("#tagline").textContent=l.tagline; refreshMemo(); refreshGetApp(); document.documentElement.lang=LANG;
   $("#lEN").setAttribute("aria-pressed",LANG==="en"); $("#lIT").setAttribute("aria-pressed",LANG==="it");
-  $("#bLoadP").innerHTML=ICON.open+esc(l.loadP); $("#bSaveP").innerHTML=ICON.save+esc(l.saveP); $("#bExportTop").innerHTML=ICON.pdf+esc(l.export); $("#bExportTop").classList.add("js-export"); refreshProUI();
+  $("#bMemoTop").textContent=l.memBtnData; $("#bLoadP").innerHTML=ICON.open+esc(l.loadP); $("#bSaveP").innerHTML=ICON.save+esc(l.saveP); $("#bExportTop").innerHTML=ICON.pdf+esc(l.export); $("#bExportTop").classList.add("js-export"); refreshProUI();
   $("#tabs").innerHTML = l.tabs.map((t,i)=>`<button class="tab" role="tab" data-tab="${i}" title="${esc(t)}" aria-label="${esc(t)}" aria-selected="${S.tab===i}"><span class="n">${i+1}</span><span class="l">${esc(t)}</span></button>`).join("");
   $("#pane").innerHTML = paneHTML();
   bindPanel(); drawThemePreviews(); histUI(); renderPreflight();
@@ -1205,7 +1206,7 @@ function memInit(){
 function syncEditor(force){
   const box=$("#cardEd"), l=L(), n=S.data.rows.length, h=S.data.headers;
   if(S.view==="sheet" && n){ box.hidden=true; return; }
-  const sig=[LANG,S.sel,n,h.join("|"),S.front.image.field,S.front.body.field,S.print.qtyField,S.back.imgCol,S.back.mode,Object.keys(S.images).length].join("§");
+  const sig=[LANG,S.sel,n,h.join("|"),S.front.image.field,S.front.body.field,S.print.qtyField,S.back.imgCol,S.back.mode,S.back.logoKey,Object.keys(S.images).length].join("§");
   if(!force && sig===edSig && !box.hidden) return;
   if(!force && document.activeElement && document.activeElement.matches("#cardEd input,#cardEd textarea")) return;
   edSig=sig; box.hidden=false; edArm=0;
@@ -1218,6 +1219,7 @@ function syncEditor(force){
   box.innerHTML=`<details ${edOpen?"open":""}><summary><span class="edic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span><span class="edtx"><b>${esc(l.edT)} · ${S.sel+1}/${n}</b><small>${esc(l.edDesc)}</small></span><span class="edpill"><span class="o">${esc(l.edOpenB)}</span><span class="c">${esc(l.edCloseB)}</span></span></summary>
     <div class="edact"><button class="btn" type="button" data-ed="new">${esc(l.edNew)}</button><button class="btn" type="button" data-ed="dup">${esc(l.edDup)}</button><button class="btn" type="button" data-ed="del">${esc(l.edDel)}</button></div>
     <div class="edimgs">${[["front",l.edFront,key],["back",l.edBack,bkey]].map(([kd,lab,k])=>`<div class="edimgcell"><span class="hint"><b>${esc(lab)}</b>${kd==="back"&&!bkey&&S.back.mode==="uniform"?" · "+esc(l.edBackSame):""}</span><div class="edimg">${k?`<img alt="" src="${S.images[k]}">`:`<span class="noimg"></span>`}<button class="btn" type="button" data-ed="pick-${kd}">${esc(k?l.edChange:l.edPick)}</button>${k?`<button class="btn" type="button" data-ed="no-${kd}">${esc(l.edRemove)}</button>`:""}</div></div>`).join("")}</div>
+    ${S.back.mode==="uniform" && (bkey||S.back.logoKey||S.back.logo)?`<details class="adv" open><summary class="advt"><b>${esc(l.zoomEdT)}</b></summary>${zoomUI(true)}</details>`:""}
     <div class="edgrid">${fields}<label class="f" style="flex:0 1 150px">${esc(l.edCopies)}<input type="number" min="1" max="99" step="1" inputmode="numeric" data-cp="1" value="${qv}"></label></div><p class="hint">${esc(l.edDropHint)}</p></details>`; }
 function initEditor(){
   const box=$("#cardEd");
@@ -1243,14 +1245,10 @@ function initEditor(){
     if(!S.data.rows.length || isSample()){ await addImages(fs, true); makePhotoDeck(); return; }
     if(fs.length===1 && S.data.rows.length && S.view!=="sheet") await setCardImage(fs[0]); else await addImages(fs); });
 }
-function zoomUI(){
+function zoomUI(all){
   const l=L(), B=S.back, row=(key,lab,min,max,step,val,unit)=>`<label class="f zrow"><span>${esc(lab)}</span><span class="zctl"><input type="range" min="${min}" max="${max}" step="${step}" value="${val}" data-z="${key}" aria-label="${esc(lab)}"><input type="number" min="${min}" max="${max}" step="${step}" value="${val}" data-z="${key}" inputmode="numeric" aria-label="${esc(lab)}"><i>${unit}</i></span></label>`;
-  return `<div class="zoom">${row("imgScale",l.zoomT,10,300,5,+B.imgScale||100,"%")}${row("imgX",l.zoomX,-50,50,1,+B.imgX||0,"%")}${row("imgY",l.zoomY,-50,50,1,+B.imgY||0,"%")}<button class="btn" type="button" id="bZoomReset">${esc(l.zoomReset)}</button></div>`; }
+  return `<div class="zoom">${row("imgScale",l.zoomT,10,300,5,+B.imgScale||100,"%")}${row("imgX",l.zoomX,-50,50,1,+B.imgX||0,"%")}${row("imgY",l.zoomY,-50,50,1,+B.imgY||0,"%")}<button class="btn" type="button" data-zreset="1">${esc(l.zoomReset)}</button>${all?`<p class="hint">${esc(l.zoomAll)}</p>`:""}</div>`; }
 function bindPanel(){
-  document.querySelectorAll("[data-z]").forEach(el=>el.addEventListener("input",()=>{
-    const k=el.dataset.z, v=parseFloat(el.value); if(isNaN(v)) return; S.back[k]=v;
-    document.querySelectorAll(`[data-z="${k}"]`).forEach(o=>{ if(o!==el) o.value=v; }); scheduleRender(); }));
-  const zr=document.getElementById("bZoomReset"); if(zr) zr.onclick=()=>{ S.back.imgScale=100; S.back.imgX=0; S.back.imgY=0; buildPanel(); scheduleRender(); };
   document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{ S.tab=+b.dataset.tab; buildPanel(); });
   document.querySelectorAll("details.slot").forEach(d=>d.addEventListener("toggle",()=>{ d.open?openSlots.add(d.dataset.slot):openSlots.delete(d.dataset.slot); }));
   document.querySelectorAll("[data-k]").forEach(el=>{
@@ -1352,7 +1350,9 @@ $("#fPhotoDeck").onchange=async e=>{ await addImages(e.target.files, true); e.ta
 $("#fBackImg").onchange=async e=>{ const f=e.target.files[0]; if(f){ const ks=await addImages([f], true); if(ks[0]){ S.back.logoKey=ks[0]; S.back.logo=null; } buildPanel(); setTimeout(scheduleRender,150); } e.target.value=""; };
 $("#fProject").onchange=async e=>{ const f=e.target.files[0]; if(f){ try{ loadProject(JSON.parse(await readFile(f,true))); }catch(err){ toast("?"); } } e.target.value=""; };
 document.querySelectorAll("#viewSeg button").forEach(b=>b.onclick=()=>{ S.view=b.dataset.v; scheduleRender(); });
-$("#bUndo").onclick=doUndo; $("#bRedo").onclick=doRedo; $("#bSaveP").onclick=saveProject; $("#bLoadP").onclick=()=>$("#fProject").click(); $("#bExportTop").onclick=()=>exportPDF(false);
+$("#bMemoTop").onclick=memOpen;
+document.addEventListener("input", e=>{ const el=e.target, k=el&&el.dataset&&el.dataset.z; if(!k) return; const v=parseFloat(el.value); if(isNaN(v)) return; S.back[k]=v; document.querySelectorAll(`[data-z="${k}"]`).forEach(o=>{ if(o!==el) o.value=v; }); scheduleRender(); });
+document.addEventListener("click", e=>{ const b=e.target.closest&&e.target.closest("[data-zreset]"); if(!b) return; S.back.imgScale=100; S.back.imgX=0; S.back.imgY=0; document.querySelectorAll("[data-z]").forEach(o=>{ o.value=o.dataset.z==="imgScale"?100:0; }); scheduleRender(); }); $("#bUndo").onclick=doUndo; $("#bRedo").onclick=doRedo; $("#bSaveP").onclick=saveProject; $("#bLoadP").onclick=()=>$("#fProject").click(); $("#bExportTop").onclick=()=>exportPDF(false);
 const setLang=g=>{ LANG=g; try{ localStorage.setItem("cp-lang",g); }catch(e){} buildPanel(); scheduleRender(); };
 $("#lEN").onclick=()=>setLang("en"); $("#lIT").onclick=()=>setLang("it");
 $("#bPro").onclick=async()=>{ const c=await askPro(0); if(c==="buy") await buyPro(); };
