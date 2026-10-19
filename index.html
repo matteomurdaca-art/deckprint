@@ -276,14 +276,13 @@ textarea{min-height:130px;font-family:var(--f-mono);font-size:.76rem;resize:vert
     <div class="actions">
       <span class="lang" role="group" aria-label="Language"><button id="lEN">EN</button><button id="lIT">IT</button></span>
       <span class="undo" role="group" style="display:inline-flex;gap:4px"><button class="btn ic" id="bUndo" type="button" disabled></button><button class="btn ic" id="bRedo" type="button" disabled></button></span>
-      <button class="btn" id="bMemoTop" type="button"></button>
       <button class="btn" id="bLoadP"></button>
       <button class="btn" id="bSaveP"></button>
       <button class="btn pro" id="bPro" hidden></button>
       <button class="btn primary" id="bExportTop"></button>
     </div>
   </header>
-  <div class="memo" id="memo" hidden>
+  <div class="memo" id="memo">
     <svg viewBox="0 0 46 46" aria-hidden="true"><rect x="5" y="10" width="23" height="29" rx="4" fill="var(--cyan)" transform="rotate(-10 16 24)"/><rect x="17" y="8" width="23" height="29" rx="4" fill="var(--panel)" stroke="var(--ink)" stroke-width="2" transform="rotate(8 29 22)"/><path d="M29 28c-5.2-3.6-6.3-6.2-4.2-8.3 1.7-1.7 3.5-.8 4.2.4.7-1.2 2.5-2.1 4.2-.4 2.1 2.1 1 4.7-4.2 8.3z" fill="var(--magenta)" transform="rotate(8 29 22)"/></svg>
     <div class="mt"><b></b><span class="md"></span></div>
     <button class="btn primary" id="bMemo" type="button"></button>
@@ -978,7 +977,7 @@ function buildPanel(){
   const l=L();
   $("#tagline").textContent=l.tagline; refreshMemo(); refreshGetApp(); document.documentElement.lang=LANG;
   $("#lEN").setAttribute("aria-pressed",LANG==="en"); $("#lIT").setAttribute("aria-pressed",LANG==="it");
-  $("#bMemoTop").textContent=l.memBtnData; $("#bLoadP").innerHTML=ICON.open+esc(l.loadP); $("#bSaveP").innerHTML=ICON.save+esc(l.saveP); $("#bExportTop").innerHTML=ICON.pdf+esc(l.export); $("#bExportTop").classList.add("js-export"); refreshProUI();
+  $("#bLoadP").innerHTML=ICON.open+esc(l.loadP); $("#bSaveP").innerHTML=ICON.save+esc(l.saveP); $("#bExportTop").innerHTML=ICON.pdf+esc(l.export); $("#bExportTop").classList.add("js-export"); refreshProUI();
   $("#tabs").innerHTML = l.tabs.map((t,i)=>`<button class="tab" role="tab" data-tab="${i}" title="${esc(t)}" aria-label="${esc(t)}" aria-selected="${S.tab===i}"><span class="n">${i+1}</span><span class="l">${esc(t)}</span></button>`).join("");
   $("#pane").innerHTML = paneHTML();
   bindPanel(); drawThemePreviews(); histUI(); renderPreflight();
@@ -1096,7 +1095,7 @@ const FREE_PAIRS=4, MEMMAX=24, MEMCAP={s:12,m:17,l:22}, MEMBACKSZ={s:9,m:13,l:18
 const memFresh=()=>({step:0, photos:[], shape:"big", back:"family", text:"", names:true, capPos:"below", capSize:"m", backSize:"m", backPos:"below", backImg:null, backFit:"cover"});
 let M=memFresh();
 const memNice=fn=>{ const b=String(fn).replace(/\.[a-z0-9]+$/i,"").replace(/[_\-]+/g," ").trim(); if(!b || /\d{4,}/.test(b)) return ""; return b.charAt(0).toUpperCase()+b.slice(1); };
-function refreshMemo(){ const b=$("#memo"); if(!b) return; const l=L(); b.hidden=!(!S.data.rows.length || isSample()); b.querySelector("b").textContent=l.memBanT; b.querySelector(".md").textContent=l.memBanD; b.querySelector("button").textContent=l.memBanB; }
+function refreshMemo(){ const b=$("#memo"); if(!b) return; const l=L(); b.hidden=false; b.querySelector("b").textContent=l.memBanT; b.querySelector(".md").textContent=l.memBanD; b.querySelector("button").textContent=l.memBanB; }
 function memApply(over={}){ // porta l'app nello stato "memory"; con memSwap viene poi ripristinato
   const l=L(), o=Object.assign({},M,over), pr=MEMBACKS[o.back], z=MEMSIZES[o.shape];
   S.card={preset:z.preset, w:z.w, h:z.h};
@@ -1350,7 +1349,6 @@ $("#fPhotoDeck").onchange=async e=>{ await addImages(e.target.files, true); e.ta
 $("#fBackImg").onchange=async e=>{ const f=e.target.files[0]; if(f){ const ks=await addImages([f], true); if(ks[0]){ S.back.logoKey=ks[0]; S.back.logo=null; } buildPanel(); setTimeout(scheduleRender,150); } e.target.value=""; };
 $("#fProject").onchange=async e=>{ const f=e.target.files[0]; if(f){ try{ loadProject(JSON.parse(await readFile(f,true))); }catch(err){ toast("?"); } } e.target.value=""; };
 document.querySelectorAll("#viewSeg button").forEach(b=>b.onclick=()=>{ S.view=b.dataset.v; scheduleRender(); });
-$("#bMemoTop").onclick=memOpen;
 document.addEventListener("input", e=>{ const el=e.target, k=el&&el.dataset&&el.dataset.z; if(!k) return; const v=parseFloat(el.value); if(isNaN(v)) return; S.back[k]=v; document.querySelectorAll(`[data-z="${k}"]`).forEach(o=>{ if(o!==el) o.value=v; }); scheduleRender(); });
 document.addEventListener("click", e=>{ const b=e.target.closest&&e.target.closest("[data-zreset]"); if(!b) return; S.back.imgScale=100; S.back.imgX=0; S.back.imgY=0; document.querySelectorAll("[data-z]").forEach(o=>{ o.value=o.dataset.z==="imgScale"?100:0; }); scheduleRender(); }); $("#bUndo").onclick=doUndo; $("#bRedo").onclick=doRedo; $("#bSaveP").onclick=saveProject; $("#bLoadP").onclick=()=>$("#fProject").click(); $("#bExportTop").onclick=()=>exportPDF(false);
 const setLang=g=>{ LANG=g; try{ localStorage.setItem("cp-lang",g); }catch(e){} buildPanel(); scheduleRender(); };
