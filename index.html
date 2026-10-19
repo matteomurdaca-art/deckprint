@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#18181D">
-<meta name="description" content="Make your own card deck and print it at home: write your cards or import a spreadsheet, add pictures, export a double-sided PDF with crop marks.">
+<meta name="description" content="Make your own card deck or a photo memory game and print it at home: write your cards or import a spreadsheet, add pictures, export a double-sided PDF with crop marks.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -33,6 +33,9 @@
 *{box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
 .wrap{max-width:1400px;margin:0 auto;padding-inline:16px;padding-block:12px 40px;display:flex;flex-direction:column;gap:14px}
+/* Inside an iframe (itch.io loads games with scrolling="no") the page itself cannot scroll, so the app scrolls inside its own container instead. */
+html.embedded,html.embedded body{height:100%;overflow:hidden}
+html.embedded .wrap{height:100%;overflow-y:auto;overscroll-behavior:contain}
 button{font:inherit;color:inherit;cursor:pointer}
 input,select,textarea{font:inherit;color:var(--ink)}
 :focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
@@ -179,7 +182,48 @@ textarea{min-height:130px;font-family:var(--f-mono);font-size:.76rem;resize:vert
 .sheetwrap{display:flex;justify-content:center;padding:6px 0}
 .sheetwrap canvas{max-width:100%;height:auto;max-height:76vh;width:auto;box-shadow:0 18px 40px rgba(0,0,0,.4);background:#fff}
 .empty{display:grid;place-items:center;min-height:480px;text-align:center}
+.empty .hint{color:inherit;opacity:.8;margin:8px 0 12px}
 .empty p{max-width:34ch;font-size:1.05rem}
+/* memory di famiglia */
+.memo{display:flex;gap:12px 16px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:var(--soft);border:1.5px solid var(--ink)}
+.memo[hidden]{display:none}
+.memo>svg{width:46px;height:46px;flex:none}
+.memo .mt{display:flex;flex-direction:column;min-width:0;flex:1 1 240px;gap:1px}
+.memo .mt b{font-family:var(--f-display);font-size:1.05rem;letter-spacing:-.01em}
+.memo .mt span{color:var(--muted);font-size:.86rem;line-height:1.35}
+#memDlg{border:0;border-radius:16px;padding:0;max-width:700px;width:calc(100% - 32px);max-height:calc(100dvh - 32px);box-shadow:0 20px 60px rgba(0,0,0,.35);background:var(--panel);color:var(--ink)}
+#memDlg[open]{display:flex;flex-direction:column}
+#memDlg::backdrop{background:rgba(20,20,24,.55)}
+.mhead{padding:18px 18px 4px;display:flex;flex-direction:column;gap:12px;flex:none}
+.mhead h3{font-family:var(--f-display);font-size:1.3rem;margin:0;letter-spacing:-.01em}
+.mst{display:flex;gap:6px;list-style:none;margin:0;padding:0}
+.mst li{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:7px;font-size:.8rem;font-weight:600;color:var(--muted);padding:6px 8px;border-radius:9px}
+.mst li .n{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:.7rem;color:#fff;flex:none}
+.mst li:nth-child(1) .n{background:var(--cyan)}.mst li:nth-child(2) .n{background:var(--magenta)}.mst li:nth-child(3) .n{background:var(--yellow);color:#18181D}
+.mst li[aria-current="step"]{background:var(--soft);color:var(--ink)}
+.mbody{padding:12px 18px 14px;overflow:auto;flex:1 1 auto;min-height:min(400px,60dvh);display:flex;flex-direction:column;gap:12px;overscroll-behavior:contain}
+.mbody>*{flex-shrink:0}
+.mbody .lead{margin:0}
+.mfoot{padding:12px 18px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--rule);flex:none}
+.mfoot .r{display:flex;gap:8px;margin-left:auto;align-items:center;flex-wrap:wrap}
+.mdrop{padding:26px 14px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+.mph{position:relative;display:flex;flex-direction:column;gap:5px;min-width:0}
+.mph img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--rule);background:var(--soft)}
+.mph input{padding:5px 7px;font-size:.78rem}
+.mph .libadd{width:100%}
+.mbacks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.mback{border:1.5px solid var(--rule);background:var(--field);border-radius:11px;padding:8px 5px 7px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.76rem;font-weight:600;color:var(--muted)}
+.mback canvas{width:100%;max-width:84px;height:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+.mback[aria-pressed="true"]{border-color:var(--ink);color:var(--ink)}
+.mprev{display:flex;gap:22px;justify-content:center;align-items:flex-end;flex-wrap:wrap;padding:18px 14px 12px;background:var(--mat);color:var(--matink);border-radius:12px;
+  background-image:linear-gradient(var(--matline2) 1px,transparent 1px),linear-gradient(90deg,var(--matline2) 1px,transparent 1px),linear-gradient(var(--matline) 1px,transparent 1px),linear-gradient(90deg,var(--matline) 1px,transparent 1px);background-size:100px 100px,100px 100px,20px 20px,20px 20px}
+.mprev figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+.mprev canvas{height:min(200px,38vw);width:auto;max-width:100%;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}
+.mprev figcaption{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.seg button small.dim{display:block;font-family:var(--f-mono);font-size:.68rem;font-weight:500;opacity:.8}
+.msum{font-family:var(--f-display);font-weight:800;font-size:1.05rem;margin:0}
+@media (max-width:520px){.mbacks{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:9px;max-width:calc(100% - 32px);z-index:9;box-shadow:var(--shadow)}
 @media (prefers-reduced-motion:reduce){.thumbs canvas{transition:none}}
 .btn.pro{background:linear-gradient(135deg,#F2B705,#E08A00);color:#1d1600;border-color:transparent;font-weight:700}
@@ -237,6 +281,11 @@ textarea{min-height:130px;font-family:var(--f-mono);font-size:.76rem;resize:vert
       <button class="btn primary" id="bExportTop"></button>
     </div>
   </header>
+  <div class="memo" id="memo" hidden>
+    <svg viewBox="0 0 46 46" aria-hidden="true"><rect x="5" y="10" width="23" height="29" rx="4" fill="var(--cyan)" transform="rotate(-10 16 24)"/><rect x="17" y="8" width="23" height="29" rx="4" fill="var(--panel)" stroke="var(--ink)" stroke-width="2" transform="rotate(8 29 22)"/><path d="M29 28c-5.2-3.6-6.3-6.2-4.2-8.3 1.7-1.7 3.5-.8 4.2.4.7-1.2 2.5-2.1 4.2-.4 2.1 2.1 1 4.7-4.2 8.3z" fill="var(--magenta)" transform="rotate(8 29 22)"/></svg>
+    <div class="mt"><b></b><span class="md"></span></div>
+    <button class="btn primary" id="bMemo" type="button"></button>
+  </div>
   <div class="grid" id="grid">
     <div class="panel side">
       <div class="tabs" role="tablist" id="tabs"></div>
@@ -259,6 +308,9 @@ textarea{min-height:130px;font-family:var(--f-mono);font-size:.76rem;resize:vert
 <div class="dlg-actions"><button class="btn" value="free" id="proFree"></button><button class="btn" value="later" id="proLater"></button><button class="btn primary" value="buy" id="proBuy"></button></div></form></dialog>
 <input type="file" id="fData" accept=".csv,.tsv,.txt" hidden>
 <input type="file" id="fImgs" accept="image/*" multiple hidden>
+<input type="file" id="fPhotoDeck" accept="image/*" multiple hidden>
+<input type="file" id="fMemory" accept="image/*" multiple hidden>
+<dialog id="memDlg" aria-labelledby="memTitle"><div class="mhead" id="memHead"></div><div class="mbody" id="memBody"></div><div class="mfoot" id="memFoot"></div></dialog>
 <input type="file" id="fBackImg" accept="image/*" hidden>
 <input type="file" id="fCardImg" accept="image/*" hidden>
 <input type="file" id="fPickImgs" accept="image/*" multiple hidden>
@@ -266,6 +318,7 @@ textarea{min-height:130px;font-family:var(--f-mono);font-size:.76rem;resize:vert
 <div class="dlg-actions"><button class="btn" type="button" id="pkUp"></button><button class="btn" type="button" id="pkNone"></button><button class="btn primary" type="button" id="pkClose"></button></div></div></dialog>
 <input type="file" id="fProject" accept=".json,.deckprint,.cardpress" hidden>
 
+<script>try{ if(window.top!==window.self) document.documentElement.classList.add("embedded"); }catch(e){ document.documentElement.classList.add("embedded"); }</script>
 <script>
 const SAMPLE = {"it": "categoria\tdomanda\trisposta\tnota\nGEOGRAFIA\tQual è la capitale dell'Australia?\tCANBERRA\tnon Sydney!\nARTE\tChi ha dipinto la Gioconda?\tLEONARDO DA VINCI\tcirca 1503-1506\nSTORIA\tIn che anno si è svolta la Battaglia di Waterloo?\t1815\tsconfitta di Napoleone\nSTORIA\tIn che anno è caduto il Muro di Berlino?\t1989\tnovembre 1989\nGEOGRAFIA\tQual è il fiume più lungo d'Italia?\tIL PO\t652 km\nSCIENZA\tQual è il simbolo chimico dell'oro?\tAu\tdal latino aurum\nCURIOSITÀ\tQuanti minuti ci sono in un giorno?\t1440\t24 ore × 60 minuti\nARTE\tChi ha scritto “I Promessi Sposi”?\tALESSANDRO MANZONI\tedizione definitiva 1840\nSCIENZA\tQual è il pianeta più vicino al Sole?\tMERCURIO\t\nCURIOSITÀ\tQuante corde ha una chitarra classica?\tSEI\t\nSPORT\tIn che anno l'Italia ha vinto il suo ultimo Mondiale di calcio?\t2006\tfinale contro la Francia\nGEOGRAFIA\tQual è l'oceano più grande della Terra?\tPACIFICO\t\nSPORT\tQuanti giocatori per squadra in campo nella pallavolo?\tSEI\t\nGEOGRAFIA\tQual è la capitale del Canada?\tOTTAWA\tnon Toronto!\nSCIENZA\tChi ha formulato la teoria della relatività?\tALBERT EINSTEIN\t\nSCIENZA\tQual è l'osso più lungo del corpo umano?\tIL FEMORE\t\nSTORIA\tIn che anno è iniziata la Prima guerra mondiale?\t1914\t\nGEOGRAFIA\tQual è la montagna più alta del mondo?\tEVEREST\t8.849 m\nNATURA\tQuante zampe ha un ragno?\tOTTO\t\nCURIOSITÀ\tQual è la valuta del Giappone?\tLO YEN\t\nARTE\tChi ha composto “Le quattro stagioni”?\tANTONIO VIVALDI\tpubblicate nel 1725\nGEOGRAFIA\tQual è il lago più grande d'Italia?\tIL GARDA\tcirca 370 km quadrati\nNATURA\tQual è l'animale terrestre più veloce?\tIL GHEPARDO\toltre 100 km/h\nSTORIA\tIn che anno l'uomo è sbarcato sulla Luna?\t1969\tApollo 11, 20 luglio\nSCIENZA\tQual è l'elemento chimico con simbolo “W”?\tTUNGSTENO\tdetto anche wolframio\nCURIOSITÀ\tQuante carte ha un mazzo francese senza jolly?\t52\t\nGEOGRAFIA\tQual è la capitale della Norvegia?\tOSLO\t", "en": "category\tquestion\tanswer\tnote\nGEOGRAPHY\tWhat is the capital of Australia?\tCANBERRA\tnot Sydney!\nGEOGRAPHY\tWhat is the capital of Turkey?\tANKARA\tnot Istanbul!\nGEOGRAPHY\tWhich is the largest desert in the world?\tANTARCTICA\ta cold desert: the Sahara is the largest hot one\nGEOGRAPHY\tWhat is the deepest point in the world's oceans?\tMARIANA TRENCH\tabout 11,000 m, Pacific Ocean\nHISTORY\tIn which year was the Battle of Waterloo?\t1815\tNapoleon's final defeat\nHISTORY\tIn which year did World War I begin?\t1914\t\nHISTORY\tWho was the first Emperor of Rome?\tAUGUSTUS\tfrom 27 BC\nHISTORY\tWhich ship carried the Pilgrims to America in 1620?\tTHE MAYFLOWER\t\nSCIENCE\tWhat is the chemical symbol for gold?\tAu\tfrom the Latin aurum\nSCIENCE\tHow many bones are in the adult human body?\t206\t\nSCIENCE\tWhat is the most abundant gas in Earth's atmosphere?\tNITROGEN\tabout 78%\nSCIENCE\tWhich planet has the strongest winds in the Solar System?\tNEPTUNE\tover 2,000 km/h\nNATURE\tHow many hearts does an octopus have?\tTHREE\t\nNATURE\tWhat is the fastest land animal?\tTHE CHEETAH\tover 100 km/h\nNATURE\tWhich is the only mammal capable of true flight?\tTHE BAT\t\nNATURE\tHow many eyes does a honeybee have?\tFIVE\t2 large compound eyes + 3 simple ones\nSPORT\tWhich country won the first FIFA World Cup, in 1930?\tURUGUAY\t\nSPORT\tHow many players per team are on the court in volleyball?\tSIX\t\nSPORT\tWho scored the “Hand of God” goal?\tDIEGO MARADONA\t1986, against England\nART\tWho painted the Mona Lisa?\tLEONARDO DA VINCI\taround 1503–1506\nART\tWho sculpted the statue of David in Florence?\tMICHELANGELO\t\nART\tWho composed the symphony with the “Ode to Joy”?\tBEETHOVEN\tthe Ninth Symphony\nART\tWhich band released the album “The Dark Side of the Moon”?\tPINK FLOYD\t1973\nTRIVIA\tHow many minutes are there in a day?\t1440\t24 × 60 minutes\nTRIVIA\tHow many keys does a standard piano have?\t88\t52 white, 36 black\nTRIVIA\tHow many strings does a classical guitar have?\tSIX\t\nTRIVIA\tWhich spice is the most expensive in the world by weight?\tSAFFRON\t"};
 
@@ -288,7 +341,12 @@ const T = {
   pickT:"Choose a picture", pickUp:"Upload new…", pickNone:"No picture", pickClose:"Close", edFront:"Front picture", edBack:"Back picture", edBackSame:"Same back as the whole deck", newBackImgCol:"back image",
   fitT:"Back picture", fitLogo:"Centred, like a logo", fitCover:"Full card", backHint:"The same picture on every back. For a different back on each card, open \"Edit this card\" and pick one per card.", splitT:"Drag to resize the panel",
   edT:"Edit this card", edDesc:"Change the text and picture of this card, add or delete cards", edOpenB:"Open", edCloseB:"Close", edNew:"+ New card", edDup:"Duplicate", edDel:"Delete", edSure:"Sure? Click again", edImg:"Picture", edPick:"Choose picture…", edChange:"Change picture…", edRemove:"Remove", edNone:"No picture", edFirst:"Create your first card here, add a picture from a JPG or PNG file, then add more cards. No spreadsheet needed.", imgBad:"Could not read this picture. Use JPG, PNG or WebP.", imgAuto:n=>`${n} picture(s) attached to cards by name`, edDropHint:"Tip: drop a picture on the card to set it.", newCat:"Fire", newTitle:"My Monster", newText:"Fire Breath: 30 damage. Flip a coin: if heads, double it.", newVal:"60", newImgCol:"Image", newCols:["Category","Title","Text","Value"],
-  h2:"Card size", l2:"Pick a standard size or set your own.", custom:"Custom", w:"Width mm", h:"Height mm", content:"Content layout", pClassic:"Classic", pQuiz:"Text card", pPlay:"Playing card",
+  h2:"Card size", l2:"Pick a standard size or set your own.", custom:"Custom", w:"Width mm", h:"Height mm", content:"Content layout", pClassic:"Classic", pQuiz:"Text card", pPlay:"Playing card", pPhoto:"Photo card", photoHint:"The picture fills the whole card. Choose a column below if you also want a caption.", photoCap:"Caption", capPosT:"Caption position", capOver:"On the photo", capBelow:"Under the photo", capSzT:"Caption size", capSz:{s:"Small",m:"Medium",l:"Large"}, photoMake:"One card per picture", photoMakeHint:"Makes a full-photo card from every picture in your library that is not used yet. Good for memory games and photo decks.", photoMade:n=>`${n} card(s) created from your pictures`, photoDrop:"Or drop your pictures here to make a photo deck.", photoPick:"Choose pictures…", photoTitleCol:"Title",
+  memBanT:"Memory game", memBanD:"Turn your photos into a memory game to print at home. Ready in a minute.", memBanB:"Make a memory", memBtnData:"Memory game…",
+  memT:"Memory game", memSteps:["Photos","Look","Ready"],
+  memL1:"Choose the pictures. Each photo becomes a pair of cards.", memDrop:"Drop your photos here", memPick:"Choose photos…", memEx:"Try with 4 example pictures", memExNames:["Mom","Dad","Grandma","Marta"], memAddMore:"Add", memRm:"Remove", memNamePh:"Name (optional)", memNames:"Show the name under each photo", memCount:n=>`${n} ${n===1?"photo":"photos"} → ${n*2} cards`, memTip:"Tip: 6 to 12 photos make a good game. Pictures with a clear face or subject work best.", memMax:n=>`Up to ${n} photos.`, memMin:"Add at least 2 photos to continue.",
+  memL2:"Choose the size of the cards and their back.", memShape:"Card size", memShapes:{big:"Large|70×70", mid:"Medium|60×60", play:"Playing card|63×88"}, memFree:n=>`The free version makes up to ${n} pairs. Pro removes the limit.`, memBackT:"Back of the cards", memBacks:{family:"Heart", xmas:"Christmas", pine:"Forest", classic:"Classic"}, memMsg:"Message on the back (optional)", memMsgPh:"e.g. Merry Christmas, Grandma!",
+  memL3:"This is what you will get.", memSum:(p,c,s)=>`${p} pairs · ${c} cards · ${s} ${s===1?"sheet":"sheets"}`, memReplace:"This replaces the cards you have now. You can undo it.", memPro:n=>`You added ${n} pairs. The free version makes ${FREE_PAIRS}: only the first ${FREE_PAIRS} will be created. Pro removes the limit.`, memProBtn:"Get Pro", memLimited:n=>`Free version: the first ${n} pairs were created. Pro removes the limit.`, memFits:"It fits in the free version.", memPrintTip:"Print at 100% on thick paper (200–250 g), then cut along the marks.", memBackB:"Back", memNext:"Next", memMake:"Create the memory", memCancel:"Cancel", memDone:(c,s)=>`Memory ready: ${c} cards on ${s} ${s===1?"sheet":"sheets"}. Press Export PDF when you are happy.`,
   h3:"Front", l3:"Choose a look, then decide what goes where.", h4:"Back", l4:"One back for the whole deck, or a different back for every card.",
   theme:"Look", thParty:"Party", thClassic:"Classic", thModern:"Modern", thNoir:"Noir", colors:"Colours", bg:"Background", accent:"Frame", frNone:"None", frSingle:"Single", frDouble:"Double", bgSolid:"Plain", bgTint:"Soft tint", bgCat:"Category colour", panelBox:"White box behind the text", radius:"Corners mm", pattern:"Texture",
   patNone:"None", patDots:"Dots", patLines:"Lines", patGrain:"Paper",
@@ -316,7 +374,12 @@ const T = {
   pickT:"Scegli un'immagine", pickUp:"Carica nuove…", pickNone:"Nessuna immagine", pickClose:"Chiudi", edFront:"Immagine del fronte", edBack:"Immagine del retro", edBackSame:"Stesso retro di tutto il mazzo", newBackImgCol:"immagine retro",
   fitT:"Immagine del retro", fitLogo:"Centrata, come un logo", fitCover:"A tutta carta", backHint:"La stessa immagine su ogni retro. Per un retro diverso su ogni carta apri \"Modifica questa carta\" e sceglilo carta per carta.", splitT:"Trascina per ridimensionare il pannello",
   edT:"Modifica questa carta", edDesc:"Cambia testo e immagine della carta, aggiungi o elimina carte", edOpenB:"Apri", edCloseB:"Chiudi", edNew:"+ Nuova carta", edDup:"Duplica", edDel:"Elimina", edSure:"Sicuro? Clicca ancora", edImg:"Immagine", edPick:"Scegli immagine…", edChange:"Cambia immagine…", edRemove:"Togli", edNone:"Nessuna immagine", edFirst:"Crea qui la tua prima carta, aggiungi un'immagine da un file JPG o PNG, poi aggiungi altre carte. Non serve nessun foglio di calcolo.", imgBad:"Non riesco a leggere questa immagine. Usa JPG, PNG o WebP.", imgAuto:n=>`${n} immagine/i collegata/e alle carte dal nome`, edDropHint:"Consiglio: trascina un'immagine sulla carta per impostarla.", newCat:"Fuoco", newTitle:"Il mio mostro", newText:"Soffio di fuoco: 30 danni. Lancia una moneta: se esce testa, raddoppia.", newVal:"60", newImgCol:"Immagine", newCols:["Categoria","Titolo","Testo","Valore"],
-  h2:"Formato della carta", l2:"Scegli un formato standard o imposta le tue misure.", custom:"Personalizzato", w:"Larghezza mm", h:"Altezza mm", content:"Impaginazione del contenuto", pClassic:"Classica", pQuiz:"Carta di testo", pPlay:"Carta da gioco",
+  h2:"Formato della carta", l2:"Scegli un formato standard o imposta le tue misure.", custom:"Personalizzato", w:"Larghezza mm", h:"Altezza mm", content:"Impaginazione del contenuto", pClassic:"Classica", pQuiz:"Carta di testo", pPlay:"Carta da gioco", pPhoto:"Carta foto", photoHint:"L'immagine riempie tutta la carta. Se vuoi anche una didascalia, scegli una colonna qui sotto.", photoCap:"Didascalia", capPosT:"Posizione della scritta", capOver:"Sopra la foto", capBelow:"Sotto la foto", capSzT:"Grandezza della scritta", capSz:{s:"Piccola",m:"Media",l:"Grande"}, photoMake:"Una carta per ogni immagine", photoMakeHint:"Crea una carta a tutta foto per ogni immagine della libreria non ancora usata. Ideale per memory e mazzi di foto.", photoMade:n=>`${n} carta/e create dalle tue immagini`, photoDrop:"Oppure trascina qui le tue immagini per fare un mazzo di foto.", photoPick:"Scegli immagini…", photoTitleCol:"Titolo",
+  memBanT:"Gioco Memory", memBanD:"Trasforma le tue foto in un memory da stampare a casa. Pronto in un minuto.", memBanB:"Crea il memory", memBtnData:"Gioco Memory…",
+  memT:"Gioco Memory", memSteps:["Foto","Stile","Pronto"],
+  memL1:"Scegli le immagini. Ogni foto diventa una coppia di carte.", memDrop:"Trascina qui le tue foto", memPick:"Scegli le foto…", memEx:"Prova con 4 immagini di esempio", memExNames:["Mamma","Papà","Nonna","Marta"], memAddMore:"Aggiungi", memRm:"Togli", memNamePh:"Nome (facoltativo)", memNames:"Mostra il nome sotto ogni foto", memCount:n=>`${n} ${n===1?"foto":"foto"} → ${n*2} carte`, memTip:"Consiglio: da 6 a 12 foto fanno un bel gioco. Funzionano meglio le immagini con un volto o un soggetto ben chiaro.", memMax:n=>`Al massimo ${n} foto.`, memMin:"Aggiungi almeno 2 foto per continuare.",
+  memL2:"Scegli la misura delle carte e il loro retro.", memShape:"Misura delle carte", memShapes:{big:"Grande|70×70", mid:"Media|60×60", play:"Carta da gioco|63×88"}, memFree:n=>`La versione gratuita crea fino a ${n} coppie. Con Pro il limite sparisce.`, memBackT:"Retro delle carte", memBacks:{family:"Cuore", xmas:"Natale", pine:"Bosco", classic:"Classico"}, memMsg:"Scritta sul retro (facoltativa)", memMsgPh:"es. Buon Natale, nonna!",
+  memL3:"Ecco cosa otterrai.", memSum:(p,c,s)=>`${p} coppie · ${c} carte · ${s} ${s===1?"foglio":"fogli"}`, memReplace:"Questo sostituisce le carte che hai adesso. Puoi annullare.", memPro:n=>`Hai aggiunto ${n} coppie. La versione gratuita ne crea ${FREE_PAIRS}: verranno create solo le prime ${FREE_PAIRS}. Con Pro il limite sparisce.`, memProBtn:"Passa a Pro", memLimited:n=>`Versione gratuita: create le prime ${n} coppie. Con Pro il limite sparisce.`, memFits:"Entra nella versione gratuita.", memPrintTip:"Stampa al 100% su carta spessa (200–250 g), poi ritaglia lungo i segni.", memBackB:"Indietro", memNext:"Avanti", memMake:"Crea il memory", memCancel:"Annulla", memDone:(c,s)=>`Memory pronto: ${c} carte su ${s} ${s===1?"foglio":"fogli"}. Premi Esporta PDF quando sei soddisfatto.`,
   h3:"Fronte", l3:"Scegli uno stile, poi decidi cosa va dove.", h4:"Retro", l4:"Un retro uguale per tutto il mazzo, o diverso per ogni carta.",
   theme:"Stile", thParty:"Festa", thClassic:"Classico", thModern:"Moderno", thNoir:"Noir", colors:"Colori", bg:"Sfondo", accent:"Cornice", frNone:"Nessuna", frSingle:"Singola", frDouble:"Doppia", bgSolid:"Tinta unita", bgTint:"Tinta leggera", bgCat:"Colore categoria", panelBox:"Riquadro bianco dietro il testo", radius:"Angoli mm", pattern:"Trama",
   patNone:"Nessuna", patDots:"Puntini", patLines:"Righe", patGrain:"Carta",
@@ -397,7 +460,7 @@ const THEMES = {
 /* ---------- stato ---------- */
 const slot = (field, font, size, color, align, extra={}) => ({field, font, size, color, align, ...extra});
 function freshSide(){ return {
-  theme:"party", bg:"#FFFFFF", bgMode:"tint", pattern:"dots", frame:"none", frameColor:"#18181D", bandStyle:"full", panel:true, radius:3.5,
+  theme:"party", fullImage:false, capPos:"over", bg:"#FFFFFF", bgMode:"tint", pattern:"dots", frame:"none", frameColor:"#18181D", bandStyle:"full", panel:true, radius:3.5,
   band: slot("", "Fredoka", 12, "#FFFFFF", "center", {colorMode:"byField", fill:"#2F6FB0", colorField:""}),
   title: slot("", "Fredoka", 15, "#1D1D26", "center"),
   image: {field:"", h:42},
@@ -521,6 +584,14 @@ function band(ctx, style, x, y, w, h, color, r, bleed){
   if(style==="ribbon"){ const n=Math.min(3,h*.45); ctx.beginPath(); ctx.moveTo(x-1.2,y); ctx.lineTo(x+w+1.2,y); ctx.lineTo(x+w+1.2-n,y+h/2); ctx.lineTo(x+w+1.2,y+h); ctx.lineTo(x-1.2,y+h); ctx.lineTo(x-1.2+n,y+h/2); ctx.closePath(); ctx.fill(); return; }
   rrect(ctx,x,y,w,h,Math.min(h/2, 3)); ctx.fill();
 }
+function motif(ctx, kind, cx, cy, s, color){ // piccoli disegni per il retro (s = mezza altezza in mm)
+  ctx.save(); ctx.translate(cx,cy); ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=Math.max(.45,s*.08); ctx.lineJoin="round"; ctx.lineCap="round";
+  if(kind==="heart"){ const k=s/9; ctx.beginPath(); ctx.moveTo(0,8*k); ctx.bezierCurveTo(-13*k,-1*k,-9*k,-10*k,0,-4*k); ctx.bezierCurveTo(9*k,-10*k,13*k,-1*k,0,8*k); ctx.closePath(); ctx.fill(); }
+  else if(kind==="star"){ ctx.beginPath(); for(let i=0;i<16;i++){ const r=i%2?s*.4:s, a=i*Math.PI/8-Math.PI/2; ctx[i?"lineTo":"moveTo"](Math.cos(a)*r, Math.sin(a)*r); } ctx.closePath(); ctx.fill(); }
+  else if(kind==="tree"){ const tri=(w,y0,y1)=>{ ctx.beginPath(); ctx.moveTo(0,y0); ctx.lineTo(w,y1); ctx.lineTo(-w,y1); ctx.closePath(); ctx.fill(); }; tri(s*.52,-s,-s*.2); tri(s*.76,-s*.55,s*.25); tri(s*.98,-s*.12,s*.72); ctx.fillRect(-s*.13,s*.72,s*.26,s*.28); }
+  else if(kind==="snow"){ for(let i=0;i<6;i++){ ctx.save(); ctx.rotate(i*Math.PI/3); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-s); ctx.moveTo(0,-s*.52); ctx.lineTo(-s*.26,-s*.78); ctx.moveTo(0,-s*.52); ctx.lineTo(s*.26,-s*.78); ctx.stroke(); ctx.restore(); } }
+  ctx.restore();
+}
 function frame(ctx, kind, color, W, H, r){
   if(kind==="none") return;
   ctx.strokeStyle=color;
@@ -530,6 +601,17 @@ function frame(ctx, kind, color, W, H, r){
 function drawSide(ctx, side, row, bleed, own){
   const W=S.card.w, H=S.card.h, sd = side==="front" ? S.front : S.back;
   ctx.save(); ctx.translate(bleed, bleed);
+  if(side==="front" && sd.fullImage){
+    const im = sd.image.field ? getImage(val(row, sd.image.field)) : null, X=-bleed, Y=-bleed, WW=W+2*bleed, HH=H+2*bleed;
+    const cap = sd.title.field ? val(row, sd.title.field) : "", below = sd.capPos==="below" && !!sd.title.field, ch = Math.max(7, sd.title.size*PT*(below?1.9:2.6)), stripH = below ? ch+2.4 : 0, PH = HH - stripH;
+    ctx.fillStyle="#E7E4DA"; ctx.fillRect(X,Y,WW,PH);
+    if(im){ ctx.save(); ctx.beginPath(); ctx.rect(X,Y,WW,PH); ctx.clip(); const rr=Math.max(WW/im.width, PH/im.height), iw=im.width*rr, ih=im.height*rr; ctx.drawImage(im,X+(WW-iw)/2,Y+(PH-ih)/2,iw,ih); ctx.restore(); }
+    else if(!exporting){ ctx.strokeStyle="#B9B5A8"; ctx.lineWidth=.6; ctx.beginPath(); ctx.moveTo(W*.28,H*.62); ctx.lineTo(W*.43,H*.42); ctx.lineTo(W*.56,H*.56); ctx.lineTo(W*.64,H*.48); ctx.lineTo(W*.74,H*.62); ctx.closePath(); ctx.stroke(); ctx.beginPath(); ctx.arc(W*.36,H*.34,W*.05,0,6.283); ctx.stroke(); }
+    if(below){ const y0=Y+PH; ctx.fillStyle="#FBF6EA"; ctx.fillRect(X,y0,WW,stripH); if(cap) drawText(ctx, cap, sd.title, 3, H-stripH+.6, W-6, ch, {vcenter:true, color:"#2B2420"}); }
+    else if(cap){ const y0=H-ch-4, g=ctx.createLinearGradient(0,y0,0,H+bleed); g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(.45,"rgba(0,0,0,.55)"); g.addColorStop(1,"rgba(0,0,0,.72)"); ctx.fillStyle=g; ctx.fillRect(X,y0,WW,ch+4+bleed); drawText(ctx, cap, sd.title, 4, H-ch-1.2, W-8, ch, {vcenter:true, color:"#FFFFFF"}); }
+    frame(ctx, sd.frame, sd.frameColor, W, H, sd.radius);
+    ctx.restore(); return;
+  }
   const catField = sd.band.colorField || sd.band.field || (S.data.headers[0]||"");
   const cat = categoryColor(val(row, catField), catField);
   const accent = sd.band.colorMode==="byField" ? cat : sd.band.fill;
@@ -539,11 +621,12 @@ function drawSide(ctx, side, row, bleed, own){
   const ink = onColor(bg);
   pattern(ctx, sd.pattern, -bleed, -bleed, W+2*bleed, H+2*bleed, sd.bgMode==="category"||lum(bg)<.3 ? "#FFFFFF" : "#000000");
   if(side==="back" && S.back.mode==="uniform"){
-    const ownIm = (own && S.back.imgCol) ? getImage(val(row, S.back.imgCol)) : null, im = ownIm || getLogo(), hasText = !!S.back.text, cover = !!im && S.back.imgFit==="cover";
+    const ownIm = (own && S.back.imgCol) ? getImage(val(row, S.back.imgCol)) : null, im = ownIm || getLogo(), hasText = !!S.back.text, cover = !!im && S.back.imgFit==="cover", deco = !!S.back.motif && !im;
     if(cover){ ctx.save(); ctx.beginPath(); ctx.rect(-bleed,-bleed,W+2*bleed,H+2*bleed); ctx.clip(); const rr=Math.max((W+2*bleed)/im.width,(H+2*bleed)/im.height), iw=im.width*rr, ih=im.height*rr; ctx.drawImage(im,(W-iw)/2,(H-ih)/2,iw,ih); ctx.restore(); }
     frame(ctx, sd.frame==="none"?"double":sd.frame, S.back.textColor, W, H, sd.radius);
     if(im && !cover){ const maxW=W*0.62, maxH=hasText?H*0.42:H*0.6, r=Math.min(maxW/im.width, maxH/im.height), iw=im.width*r, ih=im.height*r; ctx.drawImage(im,(W-iw)/2, hasText? H*0.42-ih/2 : (H-ih)/2, iw, ih); }
-    if(hasText){ drawText(ctx, S.back.text, {font:sd.title.font, size:sd.title.size*1.5, color:S.back.textColor, align:"center"}, 7, cover?H*0.62:im?H*0.62:7, W-14, (cover||im)?H*0.26:H-14, {vcenter:true, color:S.back.textColor}); }
+    if(deco){ motif(ctx, S.back.motif, W/2, hasText?H*0.4:H/2, Math.min(W,H)*(hasText?0.2:0.26), S.back.textColor); }
+    if(hasText){ drawText(ctx, S.back.text, {font:sd.title.font, size:sd.title.size*1.5, color:S.back.textColor, align:"center"}, 7, (cover||im||deco)?H*0.62:7, W-14, (cover||im||deco)?H*0.26:H-14, {vcenter:true, color:S.back.textColor}); }
     ctx.restore(); return;
   }
   const pad = 3.4; let top = pad;
@@ -636,7 +719,7 @@ function imgUsage(){
   const note=(name,wmm,hmm,fit)=>{ const k=imgKey(name); if(!k) return; const im=getImage(k); if(!im||!im.width) return;
     const r=fit==="contain"?Math.min(wmm/im.width,hmm/im.height):Math.max(wmm/im.width,hmm/im.height); const dpi=25.4/r; if(!(k in out)||dpi<out[k]) out[k]=dpi; };
   rows.forEach(ri=>{ const row=S.data.rows[ri]; if(!row) return;
-    if(S.front.image.field) note(val(row,S.front.image.field), W-2*pad, (H-2*pad)*S.front.image.h/100, "cover");
+    if(S.front.image.field) S.front.fullImage ? note(val(row,S.front.image.field), W+2*b, H+2*b, "cover") : note(val(row,S.front.image.field), W-2*pad, (H-2*pad)*S.front.image.h/100, "cover");
     if(S.back.mode==="uniform"){
       const own=S.back.imgCol?String(val(row,S.back.imgCol)||"").trim():"", hasText=!!S.back.text;
       const nm=own||S.back.logoKey; if(!nm) return;
@@ -705,10 +788,10 @@ if(document.fonts) document.fonts.addEventListener("loadingdone", ()=>{ clearTim
 async function renderView(){
   await fontsReady();
   const v=$("#view"), n=S.data.rows.length, lo=layout(), d=deck(), l=L();
-  syncEditor(); histWatch(); renderPreflight();
+  syncEditor(); histWatch(); renderPreflight(); refreshMemo();
   $("#stat").textContent = n ? l.stat(d.length, lo.n, Math.ceil(d.length/Math.max(1,lo.n))) : "";
   document.querySelectorAll("#viewSeg button").forEach(b=>{ b.textContent=l[b.dataset.v]; b.setAttribute("aria-pressed", S.view===b.dataset.v); });
-  if(!n){ v.innerHTML=`<div class="empty"><p>${esc(l.empty)}</p></div>`; return; }
+  if(!n){ v.innerHTML=`<div class="empty"><div><p>${esc(l.empty)}</p><p class="hint">${esc(l.photoDrop)}</p><div class="row" style="justify-content:center"><button type="button" class="btn primary" id="bMemoEmpty" style="flex:0 0 auto">${esc(l.memBtnData)}</button><button type="button" class="btn" id="bPhotoEmpty" style="flex:0 0 auto">${esc(l.photoPick)}</button></div></div></div>`; const pb=v.querySelector("#bPhotoEmpty"); if(pb) pb.onclick=()=>$("#fPhotoDeck").click(); const mb=v.querySelector("#bMemoEmpty"); if(mb) mb.onclick=memOpen; return; }
   S.sel = Math.min(S.sel, n-1);
   if(S.view==="sheet"){
     const sc=3.2, c=document.createElement("canvas"); c.width=lo.pw*sc; c.height=lo.ph*sc; const ctx=c.getContext("2d"); ctx.fillStyle="#fff"; ctx.fillRect(0,0,c.width,c.height); ctx.scale(sc,sc);
@@ -789,7 +872,7 @@ function autoConfig(){
   const cat=find("categor","tipo","type","suit","seme","class"), title=find("titolo","title","nome","name"), corner=find("valore","value","costo","cost","punti","points");
   const q=find("domanda","question","testo","text","descrizione","description","effetto","effect"), a=find("risposta","answer"), note=find("nota","note","flavor");
   const theme = S.front.theme || "party";
-  const F=S.front=freshSide(); applyTheme(F, theme);
+  const wasPhoto=!!S.front.fullImage, F=S.front=freshSide(); applyTheme(F, theme); F.fullImage=wasPhoto;
   F.band.field=cat; F.band.colorField=cat; F.title.field=title; F.image.field=img; F.corner.field=corner; F.footer.field=a?"":note;
   F.body.field = q || h.find(x=>![cat,title,img,imgB,corner,note].includes(x)) || h[0] || "";
   if(!title && !img){ F.body.size += 2; }
@@ -814,9 +897,9 @@ function slotUI(prefix, sl, label, kind){
   let h=`<details class="slot ${on?"on":""}" data-slot="${prefix}" ${openSlots.has(prefix)?"open":""}><summary><span class="dot"></span>${esc(label)}<span class="what">${esc(sl.field||l.none)}</span></summary><div class="in">
     <div class="f"><span>${l.field}</span><select aria-label="${l.field}" data-k="${prefix}.field">${opts(cols, sl.field, l.none)}</select></div>`;
   if(kind==="image") h+=`<label class="f">${l.imgH}<input type="number" min="10" max="80" step="1" data-k="${prefix}.h" value="${sl.h}"></label>`;
-  else {
+  else if(kind!=="imagefull") {
     h+=`<div class="row"><div class="f"><span>${l.font}</span><select aria-label="${l.font}" data-k="${prefix}.font">${fontOpts(sl.font)}</select></div><label class="f" style="flex:0 1 80px">${l.sizePt}<input type="number" min="5" max="60" step="1" data-k="${prefix}.size" value="${sl.size}"></label></div>`;
-    if(kind!=="band") h+=`<label class="f">${l.color}${swatches(prefix+".color", sl.color)}</label>`;
+    if(kind!=="band" && kind!=="photocap") h+=`<label class="f">${l.color}${swatches(prefix+".color", sl.color)}</label>`;
     if(kind!=="corner" && kind!=="band") h+=`<div>${seg(prefix+".align", sl.align, [["left",l.left],["center",l.center],["right",l.right]], true)}</div>`;
   }
   if(kind==="band") h+=`<label class="f">${l.bandColor}${seg(prefix+".colorMode", sl.colorMode, [["byField",l.byField],["fixed",l.fixed]], true)}</label>${sl.colorMode==="fixed"?swatches(prefix+".fill", sl.fill):`<div class="f"><span>${l.field}</span><select aria-label="${l.field}" data-k="${prefix}.colorField">${opts(cols, sl.colorField, l.none)}</select></div>`}`;
@@ -829,6 +912,9 @@ function themeTiles(side){
 }
 function looksUI(name, sd){
   const l=L();
+  if(name==="front" && sd.fullImage) return `<p class="hint">${esc(l.photoHint)}</p>
+  <div class="group">${slotUI(name+".image", sd.image, l.image, "imagefull")}${slotUI(name+".title", sd.title, l.photoCap, "photocap")}<label class="f">${l.capPosT}${seg(name+".capPos", sd.capPos||"over", [["over",l.capOver],["below",l.capBelow]], true)}</label></div>
+  <div class="group"><label class="f">${l.accent}${seg(name+".frame", sd.frame, [["none",l.frNone],["single",l.frSingle],["double",l.frDouble]], true)}</label>${sd.frame!=="none"?`<div class="f">${swatches(name+".frameColor", sd.frameColor)}</div>`:""}</div>`;
   return `<div class="group"><span class="glabel">${l.theme}</span>${themeTiles(name)}</div>
   <div class="group"><span class="glabel">${l.colors}</span>
     <label class="f">${l.bg}${seg(name+".bgMode", sd.bgMode, [["solid",l.bgSolid],["tint",l.bgTint],["category",l.bgCat]], true)}</label>
@@ -848,7 +934,8 @@ function libHTML(){
 function paneHTML(){
   const l=L(), P=S.print, lo=layout(), imgNames=Object.keys(S.images);
   switch(S.tab){
-   case 0: return `<h2>${l.libT}</h2><p class="lead">${esc(l.libHint)}</p>${libHTML()}
+   case 0: return `<div class="row"><button class="btn" id="bMemory" type="button" style="flex:0 0 auto">${esc(l.memBtnData)}</button></div><h2>${l.libT}</h2><p class="lead">${esc(l.libHint)}</p>${libHTML()}
+     ${imgNames.length?`<div class="row"><button class="btn" id="bPhotoDeck" type="button">${esc(l.photoMake)}</button></div><p class="hint" style="margin-top:-4px">${esc(l.photoMakeHint)}</p>`:""}
      <h2>${l.h1}</h2><p class="lead">${esc(l.l1)}</p>
      <textarea id="tData" spellcheck="false" placeholder="name&#9;text&#9;value">${esc(S.data.raw)}</textarea>
      <div class="row"><button class="btn" id="bCsv">${l.loadCsv}</button><button class="btn" id="bSample">${l.sample}</button></div>
@@ -859,7 +946,7 @@ function paneHTML(){
      return `<h2>${l.h2}</h2><p class="lead">${esc(l.l2)}</p>
      <div class="sizegrid">${Object.entries(SIZES).map(([k,[w,h,n]])=>`<button type="button" class="size" data-size="${k}" aria-pressed="${S.card.preset===k}"><i style="width:${w/mx*44}px;height:${h/mx*44}px"></i>${n}<span style="font-family:var(--f-mono);font-size:.66rem">${w}×${h}</span></button>`).join("")}<button type="button" class="size" data-size="custom" aria-pressed="${S.card.preset==="custom"}"><i style="width:26px;height:26px;border-style:dashed"></i>${l.custom}</button></div>
      <div class="row"><label class="f">${l.w}<input type="number" min="20" max="200" step="0.5" data-k="card.w" value="${S.card.w}"></label><label class="f">${l.h}<input type="number" min="20" max="280" step="0.5" data-k="card.h" value="${S.card.h}"></label><label class="f">${l.radius}<input type="number" min="0" max="8" step="0.5" data-k="front.radius" value="${S.front.radius}"></label></div>
-     <div class="group"><span class="glabel">${l.content}</span>${seg("layout","",[["classic",l.pClassic],["quiz",l.pQuiz],["play",l.pPlay]], true)}</div>`; }
+     <div class="group"><span class="glabel">${l.content}</span>${seg("layout",S.front.fullImage?"photo":"",[["classic",l.pClassic],["quiz",l.pQuiz],["play",l.pPlay],["photo",l.pPhoto]], true)}</div>`; }
    case 2: return `<h2>${l.h3}</h2><p class="lead">${esc(l.l3)}</p>${looksUI("front", S.front)}`;
    case 3: return `<h2>${l.h4}</h2><p class="lead">${esc(l.l4)}</p>${seg("back.mode", S.back.mode, [["uniform",l.uniform],["data",l.fromData]], true)}
      ${S.back.mode==="uniform"?`
@@ -885,7 +972,7 @@ function paneHTML(){
 }
 function buildPanel(){
   const l=L();
-  $("#tagline").textContent=l.tagline; refreshGetApp(); document.documentElement.lang=LANG;
+  $("#tagline").textContent=l.tagline; refreshMemo(); refreshGetApp(); document.documentElement.lang=LANG;
   $("#lEN").setAttribute("aria-pressed",LANG==="en"); $("#lIT").setAttribute("aria-pressed",LANG==="it");
   $("#bLoadP").innerHTML=ICON.open+esc(l.loadP); $("#bSaveP").innerHTML=ICON.save+esc(l.saveP); $("#bExportTop").innerHTML=ICON.pdf+esc(l.export); $("#bExportTop").classList.add("js-export"); refreshProUI();
   $("#tabs").innerHTML = l.tabs.map((t,i)=>`<button class="tab" role="tab" data-tab="${i}" title="${esc(t)}" aria-label="${esc(t)}" aria-selected="${S.tab===i}"><span class="n">${i+1}</span><span class="l">${esc(t)}</span></button>`).join("");
@@ -981,6 +1068,129 @@ function newCard(){
   if(!S.data.headers.length){ S.data.headers=[...l.newCols, l.newImgCol]; S.data.rows=[[l.newCat,l.newTitle,l.newText,l.newVal,""]]; commitRows(); autoConfig(); applyLayout("classic"); S.sel=0; buildPanel(); }
   else { S.data.rows.push(S.data.headers.map(()=>"")); S.sel=S.data.rows.length-1; commitRows(); }
   syncEditor(true); scheduleRender(); }
+const isSample=()=>{ const r=S.data.raw.trim(); return !r || r===SAMPLE.en.trim() || r===SAMPLE.it.trim(); };
+function makePhotoDeck(){
+  const l=L(), keys=Object.keys(S.images); if(!keys.length) return;
+  const fresh=!S.data.rows.length || isSample();
+  if(fresh){ S.data.raw=""; S.data.headers=[]; S.data.rows=[]; }
+  if(!S.data.headers.length){ S.data.headers=[l.photoTitleCol, l.newImgCol]; S.data.rows=[]; }
+  applyLayout("photo");
+  const j=colIdx(ensureImageColumn()), ti=S.data.headers.findIndex(h=>/^(titolo|title|nome|name)$/i.test(h));
+  const used=new Set(S.data.rows.map(r=>imgKey(r[j]||"")).filter(Boolean)); let n=0;
+  keys.forEach(k=>{ if(used.has(k)) return; const r=S.data.headers.map(()=>""); r[j]=k; if(ti>=0) r[ti]=k.replace(/\.[a-z0-9]+$/,""); S.data.rows.push(r); n++; });
+  if(fresh){ S.front.title.field=""; const B=freshSide(); applyTheme(B, S.front.theme||"party"); S.back=Object.assign(B,{mode:"uniform", text:"", textColor:"#FFFFFF", logo:null, logoKey:"", imgCol:"", imgFit:"contain"}); S.back.bg="#2F6FB0"; S.back.bgMode="solid"; S.back.title.size=22; S.print.qtyField=""; S.sel=0; }
+  commitRows(); S.tab=1; buildPanel(); scheduleRender(); if(n) toast(l.photoMade(n)); }
+/* ---------- memory di famiglia: percorso guidato in 3 passi ---------- */
+const MEMBACKS={
+  family:{bg:"#2F6FB0", ink:"#FFFFFF", pattern:"dots", motif:"heart"},
+  xmas:{bg:"#A4161A", ink:"#F6E7BE", pattern:"dots", motif:"snow"},
+  pine:{bg:"#1F5F45", ink:"#EBCB75", pattern:"lines", motif:"tree"},
+  classic:{bg:"#FBF6EA", ink:"#3B2F2F", pattern:"grain", motif:"star"}};
+const MEMSIZES={big:{w:70,h:70,preset:"square"}, mid:{w:60,h:60,preset:"custom"}, play:{w:63,h:88,preset:"poker"}};
+const MEMEX=["<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 800 800\" width=\"800\" height=\"800\"><rect width=\"800\" height=\"800\" fill=\"#2FA5A0\"/><circle cx=\"660\" cy=\"150\" r=\"90\" fill=\"#ffffff\" opacity=\".16\"/><circle cx=\"120\" cy=\"680\" r=\"120\" fill=\"#ffffff\" opacity=\".12\"/><path d=\"M215 420C190 250 270 170 400 170C530 170 610 250 585 420C590 560 620 620 640 650L160 650C180 620 210 560 215 420Z\" fill=\"#6B3E26\"/><path d=\"M110 800C110 640 230 600 400 600C570 600 690 640 690 800Z\" fill=\"#D9473B\"/><rect x=\"350\" y=\"540\" width=\"100\" height=\"90\" rx=\"30\" fill=\"#E9B48A\"/><path d=\"M350 600q50 60 100 0\" fill=\"#F2C6A0\"/><rect x=\"350\" y=\"530\" width=\"100\" height=\"90\" rx=\"30\" fill=\"#F2C6A0\"/><ellipse cx=\"400\" cy=\"400\" rx=\"150\" ry=\"168\" fill=\"#F2C6A0\"/><ellipse cx=\"248\" cy=\"410\" rx=\"22\" ry=\"32\" fill=\"#F2C6A0\"/><ellipse cx=\"552\" cy=\"410\" rx=\"22\" ry=\"32\" fill=\"#F2C6A0\"/><circle cx=\"347\" cy=\"395\" r=\"15\" fill=\"#2a1f1a\"/><circle cx=\"453\" cy=\"395\" r=\"15\" fill=\"#2a1f1a\"/><circle cx=\"352\" cy=\"390\" r=\"5\" fill=\"#fff\"/><circle cx=\"458\" cy=\"390\" r=\"5\" fill=\"#fff\"/><path d=\"M318 352q29-22 58-4M424 348q29-18 58 4\" stroke=\"#3a2a22\" stroke-width=\"12\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M400 410q-14 36 6 44\" stroke=\"#00000022\" stroke-width=\"7\" fill=\"none\" stroke-linecap=\"round\"/><circle cx=\"318\" cy=\"458\" r=\"24\" fill=\"#F08A7A\" opacity=\".35\"/><circle cx=\"482\" cy=\"458\" r=\"24\" fill=\"#F08A7A\" opacity=\".35\"/><path d=\"M345 488q55 52 110 0\" stroke=\"#B5473F\" stroke-width=\"12\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M250 400C250 280 320 235 400 235C480 235 550 280 550 400C510 330 470 300 400 295C330 300 290 330 250 400Z\" fill=\"#6B3E26\"/><circle cx=\"250\" cy=\"470\" r=\"14\" fill=\"#F4C542\"/><circle cx=\"550\" cy=\"470\" r=\"14\" fill=\"#F4C542\"/></svg>", "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 800 800\" width=\"800\" height=\"800\"><rect width=\"800\" height=\"800\" fill=\"#F2B63D\"/><circle cx=\"660\" cy=\"150\" r=\"90\" fill=\"#ffffff\" opacity=\".16\"/><circle cx=\"120\" cy=\"680\" r=\"120\" fill=\"#ffffff\" opacity=\".12\"/><path d=\"M110 800C110 640 230 600 400 600C570 600 690 640 690 800Z\" fill=\"#2F5D9E\"/><rect x=\"350\" y=\"540\" width=\"100\" height=\"90\" rx=\"30\" fill=\"#E9B48A\"/><path d=\"M360 600l40 50 40-50z\" fill=\"#fff\"/><rect x=\"350\" y=\"530\" width=\"100\" height=\"90\" rx=\"30\" fill=\"#E9B48A\"/><ellipse cx=\"400\" cy=\"400\" rx=\"150\" ry=\"168\" fill=\"#E9B48A\"/><ellipse cx=\"248\" cy=\"410\" rx=\"22\" ry=\"32\" fill=\"#E9B48A\"/><ellipse cx=\"552\" cy=\"410\" rx=\"22\" ry=\"32\" fill=\"#E9B48A\"/><circle cx=\"347\" cy=\"395\" r=\"15\" fill=\"#2a1f1a\"/><circle cx=\"453\" cy=\"395\" r=\"15\" fill=\"#2a1f1a\"/><circle cx=\"352\" cy=\"390\" r=\"5\" fill=\"#fff\"/><circle cx=\"458\" cy=\"390\" r=\"5\" fill=\"#fff\"/><path d=\"M318 352q29-22 58-4M424 348q29-18 58 4\" stroke=\"#2b1d17\" stroke-width=\"12\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M400 410q-14 36 6 44\" stroke=\"#00000022\" stroke-width=\"7\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M345 488q55 52 110 0\" stroke=\"#8E3B33\" stroke-width=\"12\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M258 380C250 270 310 215 400 215C490 215 550 270 542 380C520 320 480 296 400 296C320 296 280 320 258 380Z\" fill=\"#2b1d17\"/><path d=\"M258 470C270 560 330 590 400 590C470 590 530 560 542 470C520 520 470 540 400 536C330 540 280 520 258 470Z\" fill=\"#2b1d17\"/><path d=\"M345 488q55 52 110 0\" stroke=\"#8E3B33\" stroke-width=\"12\" fill=\"none\" stroke-linecap=\"round\"/><g fill=\"none\" stroke=\"#1f1f24\" stroke-width=\"9\"><rect x=\"300\" y=\"365\" width=\"92\" height=\"66\" rx=\"22\"/><rect x=\"408\" y=\"365\" width=\"92\" height=\"66\" rx=\"22\"/><path d=\"M392 392h16\"/></g></svg>", "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 800 800\" width=\"800\" height=\"800\"><rect width=\"800\" height=\"800\" fill=\"#E88FA9\"/><circle cx=\"660\" cy=\"150\" r=\"90\" fill=\"#ffffff\" opacity=\".16\"/><circle cx=\"120\" cy=\"680\" r=\"120\" fill=\"#ffffff\" opacity=\".12\"/><circle cx=\"400\" cy=\"150\" r=\"70\" fill=\"#C9C9D3\"/><path d=\"M110 800C110 640 230 600 400 600C570 600 690 640 690 800Z\" fill=\"#8E6BBF\"/><rect x=\"350\" y=\"540\" width=\"100\" height=\"90\" rx=\"30\" fill=\"#E9B48A\"/><circle cx=\"400\" cy=\"680\" r=\"9\" fill=\"#fff\"/><circle cx=\"400\" cy=\"730\" r=\"9\" fill=\"#fff\"/><rect x=\"350\" y=\"540\" width=\"100\" height=\"90\" rx=\"30\" fill=\"#F6D3B3\"/><path d=\"M225 440C200 260 290 190 400 190C510 190 600 260 575 440C560 360 520 300 400 300C280 300 240 360 225 440Z\" fill=\"#D8D8E0\"/><ellipse cx=\"400\" cy=\"400\" rx=\"150\" ry=\"168\" fill=\"#F6D3B3\"/><ellipse cx=\"248\" cy=\"410\" rx=\"22\" ry=\"32\" fill=\"#F6D3B3\"/><ellipse cx=\"552\" cy=\"410\" rx=\"22\" ry=\"32\" fill=\"#F6D3B3\"/><circle cx=\"347\" cy=\"395\" r=\"15\" fill=\"#2a1f1a\"/><circle cx=\"453\" cy=\"395\" r=\"15\" fill=\"#2a1f1a\"/><circle cx=\"352\" cy=\"390\" r=\"5\" fill=\"#fff\"/><circle cx=\"458\" cy=\"390\" r=\"5\" fill=\"#fff\"/><path d=\"M318 352q29-22 58-4M424 348q29-18 58 4\" stroke=\"#8a8a95\" stroke-width=\"12\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M400 410q-14 36 6 44\" stroke=\"#00000022\" stroke-width=\"7\" fill=\"none\" stroke-linecap=\"round\"/><circle cx=\"318\" cy=\"458\" r=\"24\" fill=\"#F08A7A\" opacity=\".35\"/><circle cx=\"482\" cy=\"458\" r=\"24\" fill=\"#F08A7A\" opacity=\".35\"/><path d=\"M345 488q55 52 110 0\" stroke=\"#B5473F\" stroke-width=\"12\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M258 400C250 290 320 232 400 232C480 232 550 290 542 400C510 335 470 305 400 300C330 305 290 335 258 400Z\" fill=\"#D8D8E0\"/><g fill=\"none\" stroke=\"#7A4B8F\" stroke-width=\"8\"><circle cx=\"347\" cy=\"398\" r=\"46\"/><circle cx=\"453\" cy=\"398\" r=\"46\"/><path d=\"M393 396h14\"/></g><path d=\"M250 430q-4 36 12 60M550 430q4 36-12 60\" stroke=\"#D8D8E0\" stroke-width=\"10\" fill=\"none\" stroke-linecap=\"round\" opacity=\"0\"/></svg>", "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 800 800\" width=\"800\" height=\"800\"><rect width=\"800\" height=\"800\" fill=\"#8FB8E8\"/><circle cx=\"660\" cy=\"150\" r=\"90\" fill=\"#ffffff\" opacity=\".16\"/><circle cx=\"120\" cy=\"680\" r=\"120\" fill=\"#ffffff\" opacity=\".12\"/><circle cx=\"205\" cy=\"470\" r=\"62\" fill=\"#B5651D\"/><circle cx=\"595\" cy=\"470\" r=\"62\" fill=\"#B5651D\"/><rect x=\"188\" y=\"414\" width=\"34\" height=\"26\" rx=\"10\" fill=\"#E8457A\"/><rect x=\"578\" y=\"414\" width=\"34\" height=\"26\" rx=\"10\" fill=\"#E8457A\"/><path d=\"M110 800C110 640 230 600 400 600C570 600 690 640 690 800Z\" fill=\"#F4C542\"/><rect x=\"350\" y=\"540\" width=\"100\" height=\"90\" rx=\"30\" fill=\"#E9B48A\"/><path d=\"M300 640q100 70 200 0\" fill=\"#fff\" opacity=\".35\"/><rect x=\"350\" y=\"540\" width=\"100\" height=\"90\" rx=\"30\" fill=\"#E9B48A\"/><ellipse cx=\"400\" cy=\"400\" rx=\"150\" ry=\"168\" fill=\"#D9A07A\"/><ellipse cx=\"248\" cy=\"410\" rx=\"22\" ry=\"32\" fill=\"#D9A07A\"/><ellipse cx=\"552\" cy=\"410\" rx=\"22\" ry=\"32\" fill=\"#D9A07A\"/><circle cx=\"347\" cy=\"395\" r=\"15\" fill=\"#2a1f1a\"/><circle cx=\"453\" cy=\"395\" r=\"15\" fill=\"#2a1f1a\"/><circle cx=\"352\" cy=\"390\" r=\"5\" fill=\"#fff\"/><circle cx=\"458\" cy=\"390\" r=\"5\" fill=\"#fff\"/><path d=\"M318 352q29-22 58-4M424 348q29-18 58 4\" stroke=\"#3a2415\" stroke-width=\"12\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M400 410q-14 36 6 44\" stroke=\"#00000022\" stroke-width=\"7\" fill=\"none\" stroke-linecap=\"round\"/><circle cx=\"318\" cy=\"458\" r=\"24\" fill=\"#F08A7A\" opacity=\".35\"/><circle cx=\"482\" cy=\"458\" r=\"24\" fill=\"#F08A7A\" opacity=\".35\"/><path d=\"M345 488q55 52 110 0\" stroke=\"#B5473F\" stroke-width=\"12\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M250 400C246 285 320 225 400 225C480 225 554 285 550 400C520 340 480 290 400 292C320 290 280 340 250 400Z\" fill=\"#B5651D\"/><path d=\"M410 232q40 20 50 70\" stroke=\"#B5651D\" stroke-width=\"0\" fill=\"none\"/><circle cx=\"330\" cy=\"520\" r=\"3\" fill=\"#B5473F\" opacity=\"0\"/></svg>"];
+const FREE_PAIRS=4, MEMMAX=24, MEMCAP={s:12,m:17,l:22};
+const memFresh=()=>({step:0, photos:[], shape:"big", back:"family", text:"", names:true, capPos:"below", capSize:"m"});
+let M=memFresh();
+const memNice=fn=>{ const b=String(fn).replace(/\.[a-z0-9]+$/i,"").replace(/[_\-]+/g," ").trim(); if(!b || /\d{4,}/.test(b)) return ""; return b.charAt(0).toUpperCase()+b.slice(1); };
+function refreshMemo(){ const b=$("#memo"); if(!b) return; const l=L(); b.hidden=!(!S.data.rows.length || isSample()); b.querySelector("b").textContent=l.memBanT; b.querySelector(".md").textContent=l.memBanD; b.querySelector("button").textContent=l.memBanB; }
+function memApply(over={}){ // porta l'app nello stato "memory"; con memSwap viene poi ripristinato
+  const l=L(), o=Object.assign({},M,over), pr=MEMBACKS[o.back], z=MEMSIZES[o.shape];
+  S.card={preset:z.preset, w:z.w, h:z.h};
+  const F=freshSide(); applyTheme(F,"party"); F.fullImage=true; F.image.field=l.newImgCol; F.title.field=o.names?l.photoTitleCol:""; F.title.size=MEMCAP[o.capSize]||17; F.capPos=o.capPos; F.radius=3.5; S.front=F;
+  const B=freshSide(); applyTheme(B,"party"); Object.assign(B,{mode:"uniform", text:(o.text||"").trim(), textColor:pr.ink, logo:null, logoKey:"", imgCol:"", imgFit:"contain", bg:pr.bg, bgMode:"solid", pattern:pr.pattern, frame:"double", motif:pr.motif, radius:3.5}); B.title.size=13; B.title.font="Fredoka"; S.back=B;
+  S.data.headers=[l.photoTitleCol, l.newImgCol]; S.data.rows=o.photos.map(p=>[p.name, p.key]);
+}
+function memSwap(fn, over){
+  const k={front:S.front, back:S.back, card:S.card, h:S.data.headers, r:S.data.rows, i:S.images};
+  try{ memApply(over); S.images=Object.fromEntries(M.photos.map(p=>[p.key,p.url])); return fn(); }
+  finally{ S.front=k.front; S.back=k.back; S.card=k.card; S.data.headers=k.h; S.data.rows=k.r; S.images=k.i; }
+}
+async function memExample(){
+  const l=L(); M.photos.length=0;
+  for(let i=0;i<MEMEX.length;i++){
+    const url=await new Promise(res=>{ const im=new Image(); im.onload=()=>{ const c=document.createElement("canvas"); c.width=c.height=800; const x=c.getContext("2d"); x.drawImage(im,0,0,800,800); res(c.toDataURL("image/jpeg",.9)); }; im.onerror=()=>res(null); im.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(MEMEX[i]); });
+    if(!url) continue; const key="esempio-"+(i+1)+".jpg", im=new Image(); await new Promise(r=>{ im.onload=im.onerror=r; im.src=url; }); imgCache[key]=im; M.photos.push({key, url, name:l.memExNames[i]}); }
+  memRender(); }
+async function memAdd(files){
+  const l=L(); let bad=0;
+  for(const f of [...files]){ if(!f.type.startsWith("image/")) continue;
+    if(M.photos.length>=MEMMAX){ toast(l.memMax(MEMMAX)); break; }
+    const url=await loadImg(f); if(!url){ bad++; continue; }
+    const base=f.name.toLowerCase(); let key=base, n=2; while(M.photos.some(p=>p.key===key)) key=base.replace(/(\.[a-z0-9]+)?$/, "-"+(n++)+"$1");
+    const im=new Image(); await new Promise(r=>{ im.onload=im.onerror=r; im.src=url; }); imgCache[key]=im;
+    M.photos.push({key, url, name:memNice(f.name)}); }
+  if(bad) toast(l.imgBad);
+  memRender(); }
+function memRender(){
+  const l=L(), st=M.step, n=M.photos.length, ok=n>=2;
+  $("#memHead").innerHTML=`<h3 id="memTitle">${esc(l.memT)}</h3><ol class="mst">${l.memSteps.map((t,i)=>`<li ${i===st?'aria-current="step"':""}><span class="n">${i+1}</span>${esc(t)}</li>`).join("")}</ol>`;
+  let body="";
+  if(st===0){
+    body=`<p class="lead">${esc(l.memL1)}</p>`+(n
+      ? `<div class="mgrid">${M.photos.map((p,i)=>`<div class="mph"><img alt="" src="${p.url}"><button type="button" class="libx" data-m="rm" data-i="${i}" aria-label="${esc(l.memRm)}">×</button><input type="text" data-mn="${i}" value="${esc(p.name)}" placeholder="${esc(l.memNamePh)}" aria-label="${esc(l.memNamePh)}" maxlength="40"></div>`).join("")}${n<MEMMAX?`<div class="mph"><button type="button" class="libadd" data-m="pick" aria-label="${esc(l.memAddMore)}">+<small>${esc(l.memAddMore)}</small></button></div>`:""}</div>
+         <p class="msum">${esc(l.memCount(n))}</p>
+         <label class="chk"><input type="checkbox" id="memNames" ${M.names?"checked":""}> ${esc(l.memNames)}</label>`
+      : `<div class="drop mdrop"><b>${esc(l.memDrop)}</b><br><button type="button" class="btn primary" data-m="pick" style="margin-top:12px">${esc(l.memPick)}</button><br><button type="button" class="btn" data-m="example" style="margin-top:10px">${esc(l.memEx)}</button></div>`)
+      +`<p class="hint">${esc(l.memTip)}</p>`;
+  } else if(st===1){
+    const free=sh=>memSwap(()=>Math.floor(layout().n*FREE_SHEETS/2), {shape:sh});
+    body=`<p class="lead">${esc(l.memL2)}</p>
+      <div class="group"><span class="glabel">${esc(l.memShape)}</span><span class="seg full">${Object.keys(MEMSIZES).map(k=>`<button type="button" data-m="shape" data-v="${k}" aria-pressed="${M.shape===k}">${esc(l.memShapes[k].split("|")[0])}<small class="dim">${esc(l.memShapes[k].split("|")[1])}</small></button>`).join("")}</span>
+        ${PRO?"":`<p class="hint">${esc(l.memFree(FREE_PAIRS))}</p>`}</div>
+      <div class="group"><span class="glabel">${esc(l.memBackT)}</span><div class="mbacks">${Object.keys(MEMBACKS).map(k=>`<button type="button" class="mback" data-m="back" data-v="${k}" aria-pressed="${M.back===k}"><canvas data-mbp="${k}"></canvas>${esc(l.memBacks[k])}</button>`).join("")}</div></div>
+      ${M.names?`<div class="group"><span class="glabel">${esc(l.capPosT)}</span><span class="seg full">${[["below",l.capBelow],["over",l.capOver]].map(([k,t])=>`<button type="button" data-m="cappos" data-v="${k}" aria-pressed="${M.capPos===k}">${esc(t)}</button>`).join("")}</span><span class="glabel" style="margin-top:8px">${esc(l.capSzT)}</span><span class="seg full">${["s","m","l"].map(k=>`<button type="button" data-m="capsz" data-v="${k}" aria-pressed="${M.capSize===k}">${esc(l.capSz[k])}</button>`).join("")}</span></div>`:""}
+      <label class="f">${esc(l.memMsg)}<input type="text" id="memMsg" maxlength="40" value="${esc(M.text)}" placeholder="${esc(l.memMsgPh)}"></label>`;
+  } else {
+    const {sheets, cards}=memSwap(()=>{ const c=(PRO?M.photos.length:Math.min(FREE_PAIRS,M.photos.length))*2; return {cards:c, sheets:Math.ceil(c/Math.max(1,layout().n))}; });
+    const big=!PRO && M.photos.length>FREE_PAIRS, repl=S.data.rows.length && !isSample();
+    body=`<p class="lead">${esc(l.memL3)}</p>
+      <div class="mprev"><figure><canvas id="memPF"></canvas><figcaption>${esc(l.front)}</figcaption></figure><figure><canvas id="memPB"></canvas><figcaption>${esc(l.back)}</figcaption></figure></div>
+      <p class="msum">${esc(l.memSum(cards/2, cards, sheets))}</p>
+      ${PRO?"":`<div class="info">${ICON.info}<span>${esc(big?l.memPro(M.photos.length):l.memFits)}</span>${big?`<button type="button" class="btn" data-m="pro" style="margin-left:auto">${esc(l.memProBtn)}</button>`:""}</div>`}
+      ${repl?`<div class="info">${ICON.info}<span>${esc(l.memReplace)}</span></div>`:""}
+      <p class="hint">${esc(l.memPrintTip)}</p>`;
+  }
+  $("#memBody").innerHTML=body;
+  $("#memFoot").innerHTML=`<button type="button" class="btn" data-m="cancel">${esc(l.memCancel)}</button><span class="r">${st===0&&!ok?`<span class="hint">${esc(l.memMin)}</span>`:""}${st>0?`<button type="button" class="btn" data-m="prev">${esc(l.memBackB)}</button>`:""}${st<2?`<button type="button" class="btn primary" data-m="next" ${st===0&&!ok?"disabled":""}>${esc(l.memNext)}</button>`:`<button type="button" class="btn primary" data-m="make">${esc(l.memMake)}</button>`}</span>`;
+  memDraw(st);
+}
+async function memDraw(st){
+  if(st===0) return; await fontsReady();
+  const put=(c,r)=>{ if(!c) return; c.width=r.width; c.height=r.height; c.getContext("2d").drawImage(r,0,0); };
+  if(st===1) document.querySelectorAll("canvas[data-mbp]").forEach(c=>put(c, memSwap(()=>{ const r=renderCard("back",[],2.2,0); return roundedPreview(r,2.2,3.5); }, {back:c.dataset.mbp, text:""})));
+  if(st===2){ memSwap(()=>{ const f=renderCard("front", S.data.rows[0], 3.4, 0), b=renderCard("back", [], 3.4, 0); put($("#memPF"), roundedPreview(f,3.4,3.5)); put($("#memPB"), roundedPreview(b,3.4,3.5)); }); }
+}
+function memOpen(){ M.step=0; const d=$("#memDlg"); memRender(); if(d.showModal) d.showModal(); else d.setAttribute("open",""); }
+function memClose(){ const d=$("#memDlg"); if(d.close) d.close(); else d.removeAttribute("open"); }
+function memBuild(){
+  const l=L(); let P=M.photos; if(P.length<2) return;
+  let cut=false; if(!PRO && P.length>FREE_PAIRS){ P=P.slice(0,FREE_PAIRS); cut=true; }
+  const imgs=Object.fromEntries(P.map(p=>[p.key,p.url]));
+  memApply({photos:P}); S.images=imgs; S.print.qtyField=""; S.print.copies=2; S.sel=0; S.view="sheet"; S.tab=4;
+  commitRows(); memClose(); buildPanel(); scheduleRender();
+  const lo=layout(); toast(cut?l.memLimited(P.length):l.memDone(P.length*2, Math.ceil(P.length*2/Math.max(1,lo.n))));
+  M=memFresh(); }
+function memInit(){
+  const d=$("#memDlg");
+  d.addEventListener("click", e=>{ const b=e.target.closest("[data-m]"); if(!b) return; const a=b.dataset.m;
+    if(a==="pick") $("#fMemory").click();
+    else if(a==="example") memExample();
+    else if(a==="pro"){ buyPro().then(()=>memRender()); }
+    else if(a==="rm"){ const p=M.photos.splice(+b.dataset.i,1)[0]; if(p) delete imgCache[p.key]; memRender(); }
+    else if(a==="shape"){ M.shape=b.dataset.v; memRender(); }
+    else if(a==="back"){ M.back=b.dataset.v; memRender(); }
+    else if(a==="cappos"){ M.capPos=b.dataset.v; memRender(); }
+    else if(a==="capsz"){ M.capSize=b.dataset.v; memRender(); }
+    else if(a==="next"){ M.step=Math.min(2,M.step+1); memRender(); }
+    else if(a==="prev"){ M.step=Math.max(0,M.step-1); memRender(); }
+    else if(a==="cancel") memClose();
+    else if(a==="make") memBuild(); });
+  d.addEventListener("input", e=>{ const t=e.target; if(t.dataset.mn!==undefined){ const p=M.photos[+t.dataset.mn]; if(p) p.name=t.value; } else if(t.id==="memMsg") M.text=t.value; });
+  d.addEventListener("change", e=>{ if(e.target.id==="memNames") M.names=e.target.checked; });
+  d.addEventListener("dragover", e=>{ if(M.step===0 && e.dataTransfer && [...e.dataTransfer.types].includes("Files")) e.preventDefault(); });
+  d.addEventListener("drop", e=>{ if(M.step!==0) return; e.preventDefault(); memAdd(e.dataTransfer.files); });
+  $("#fMemory").onchange=async e=>{ await memAdd(e.target.files); e.target.value=""; };
+  $("#bMemo").onclick=memOpen; }
 function syncEditor(force){
   const box=$("#cardEd"), l=L(), n=S.data.rows.length, h=S.data.headers;
   if(S.view==="sheet" && n){ box.hidden=true; return; }
@@ -1019,6 +1229,7 @@ function initEditor(){
   view.addEventListener("dragover", e=>{ if(e.dataTransfer && [...e.dataTransfer.types].includes("Files")){ e.preventDefault(); view.classList.add("dropping"); } });
   view.addEventListener("dragleave", ()=>view.classList.remove("dropping"));
   view.addEventListener("drop", async e=>{ e.preventDefault(); view.classList.remove("dropping"); const fs=[...e.dataTransfer.files].filter(f=>f.type.startsWith("image/")); if(!fs.length) return;
+    if(!S.data.rows.length || isSample()){ await addImages(fs, true); makePhotoDeck(); return; }
     if(fs.length===1 && S.data.rows.length && S.view!=="sheet") await setCardImage(fs[0]); else await addImages(fs); });
 }
 function bindPanel(){
@@ -1081,7 +1292,7 @@ function bindPanel(){
   on("#bCsv", ()=>$("#fData").click()); on("#bSample", ()=>setData(SAMPLE[LANG]));
   on("#bExport", ()=>exportPDF(false)); on("#bTest", ()=>exportPDF(true));
   on("#bBackImg", ()=>openPicker("logo")); on("#bBackImgX", ()=>{ S.back.logo=null; S.back.logoKey=""; buildPanel(); scheduleRender(); });
-  on("#bLibAdd", ()=>$("#fImgs").click());
+  on("#bLibAdd", ()=>$("#fImgs").click()); on("#bPhotoDeck", makePhotoDeck); on("#bMemory", memOpen);
   document.querySelectorAll("[data-rmimg]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); removeImage(b.dataset.rmimg); });
   const lib=$("#lib"); if(lib){ lib.ondragover=e=>{ e.preventDefault(); lib.classList.add("over"); }; lib.ondragleave=()=>lib.classList.remove("over"); lib.ondrop=e=>{ e.preventDefault(); lib.classList.remove("over"); addImages(e.dataTransfer.files); }; }
 }
@@ -1093,7 +1304,8 @@ function autoConfigBack(theme){ // mantiene i campi del retro, cambia solo lo st
   if(theme==="noir"){ B.bgMode="solid"; B.bg="#17171C"; B.pattern="lines"; B.body.color="#C9A45C"; B.title.color="#F2EDE0"; B.footer.color="#B9B2A3"; }
 }
 function applyLayout(kind){
-  const F=S.front;
+  const F=S.front; F.fullImage = kind==="photo";
+  if(kind==="photo"){ if(S.data.headers.length){ ensureImageColumn(); commitRows(); } return; }
   if(kind==="quiz"){ F.image.field=""; F.title.field=""; F.corner.field=""; F.body.size=Math.max(F.body.size,14); F.body.vcenter=true; F.body.align="center"; }
   if(kind==="classic"){ F.image.h=40; F.body.size=Math.min(F.body.size,11); F.body.vcenter=false; F.body.align="left"; if(!F.title.field) F.title.field=S.data.headers.find(h=>h!==F.band.field && h!==F.body.field)||S.data.headers[0]||""; if(!F.image.field) F.image.field=S.data.headers.find(h=>!isBackCol(h) && /imm|imag|img|art|foto/i.test(h))||""; }
   if(kind==="play"){ F.corner.field=F.corner.field||S.data.headers.find(h=>S.data.rows.length && S.data.rows.every(r=>/^\d+$/.test(val(r,h))))||S.data.headers[0]||""; F.title.size=16; F.body.size=Math.min(F.body.size,11); F.body.vcenter=true; }
@@ -1103,6 +1315,7 @@ function decodeText(buf){ let t; try{ t=new TextDecoder("utf-8",{fatal:true}).de
 function readFile(file, asText){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(asText?decodeText(r.result):r.result); r.onerror=rej; asText?r.readAsArrayBuffer(file):r.readAsDataURL(file); }); }
 $("#fData").onchange=async e=>{ const f=e.target.files[0]; if(f) setData(await readFile(f,true)); e.target.value=""; };
 initEditor();
+memInit();
 (function(){ const g=$("#grid"), sp=$("#split"); if(!g||!sp) return; const LW="dp-lw";
   const set=w=>{ w=Math.max(320,Math.min(720,Math.round(w))); g.style.setProperty("--lw", w+"px"); return w; };
   try{ const s=parseInt(localStorage.getItem(LW),10); if(s) set(s); }catch(e){}
@@ -1117,6 +1330,7 @@ initEditor();
   sp.addEventListener("dblclick", ()=>{ g.style.removeProperty("--lw"); try{ localStorage.removeItem(LW); }catch(e){} });
 })();
 $("#fImgs").onchange=async e=>{ await addImages(e.target.files); e.target.value=""; };
+$("#fPhotoDeck").onchange=async e=>{ await addImages(e.target.files, true); e.target.value=""; makePhotoDeck(); };
 $("#fBackImg").onchange=async e=>{ const f=e.target.files[0]; if(f){ const ks=await addImages([f], true); if(ks[0]){ S.back.logoKey=ks[0]; S.back.logo=null; } buildPanel(); setTimeout(scheduleRender,150); } e.target.value=""; };
 $("#fProject").onchange=async e=>{ const f=e.target.files[0]; if(f){ try{ loadProject(JSON.parse(await readFile(f,true))); }catch(err){ toast("?"); } } e.target.value=""; };
 document.querySelectorAll("#viewSeg button").forEach(b=>b.onclick=()=>{ S.view=b.dataset.v; scheduleRender(); });
