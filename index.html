@@ -937,7 +937,7 @@ function libHTML(){
 function paneHTML(){
   const l=L(), P=S.print, lo=layout(), imgNames=Object.keys(S.images);
   switch(S.tab){
-   case 0: return `<div class="row"><button class="btn" id="bMemory" type="button" style="flex:0 0 auto">${esc(l.memBtnData)}</button></div><h2>${l.libT}</h2><p class="lead">${esc(l.libHint)}</p>${libHTML()}
+   case 0: return `<h2>${l.libT}</h2><p class="lead">${esc(l.libHint)}</p>${libHTML()}
      ${imgNames.length?`<div class="row"><button class="btn" id="bPhotoDeck" type="button">${esc(l.photoMake)}</button></div><p class="hint" style="margin-top:-4px">${esc(l.photoMakeHint)}</p>`:""}
      <h2>${l.h1}</h2><p class="lead">${esc(l.l1)}</p>
      <textarea id="tData" spellcheck="false" placeholder="name&#9;text&#9;value">${esc(S.data.raw)}</textarea>
