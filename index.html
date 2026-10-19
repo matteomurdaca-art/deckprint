@@ -921,7 +921,7 @@ function themeTiles(side){
 function looksUI(name, sd){
   const l=L();
   if(name==="front" && sd.fullImage) return `<p class="hint">${esc(l.photoHint)}</p>
-  <div class="group">${slotUI(name+".image", sd.image, l.image, "imagefull")}${slotUI(name+".title", sd.title, l.photoCap, "photocap")}<label class="f">${l.capPosT}${seg(name+".capPos", sd.capPos||"over", [["over",l.capOver],["below",l.capBelow]], true)}</label></div>
+  <div class="group">${slotUI(name+".image", sd.image, l.image, "imagefull")}${slotUI(name+".title", sd.title, l.photoCap, "photocap")}<label class="f">${l.capPosT}${seg(name+".capPos", sd.capPos||"over", [["over",l.capOver],["below",l.capBelow]], true)}</label></div>${name==="front"?colorsUI("front"):""}
   <div class="group"><label class="f">${l.accent}${seg(name+".frame", sd.frame, [["none",l.frNone],["single",l.frSingle],["double",l.frDouble]], true)}</label>${sd.frame!=="none"?`<div class="f">${swatches(name+".frameColor", sd.frameColor)}</div>`:""}</div>`;
   return `<div class="group"><span class="glabel">${l.theme}</span>${themeTiles(name)}</div>
   <div class="group"><span class="glabel">${l.colors}</span>
@@ -962,7 +962,7 @@ function paneHTML(){
        <div class="row"><label class="f">${l.backText}<input type="text" data-k="back.text" value="${esc(S.back.text)}"></label><div class="f"><span>${l.font}</span><select aria-label="${l.font}" data-k="back.title.font">${fontOpts(S.back.title.font)}</select></div></div>
        <label class="f">${l.pattern}${seg("back.pattern", S.back.pattern, [["none",l.patNone],["dots",l.patDots],["lines",l.patLines],["grain",l.patGrain]], true)}</label>
        <div class="group"><span class="glabel">${l.fitT}</span><div class="row"><button class="btn" id="bBackImg" type="button">${esc(S.back.logoKey||S.back.logo?l.edChange:l.edPick)}</button>${S.back.logoKey||S.back.logo?`<button class="btn" id="bBackImgX" type="button">${esc(l.edRemove)}</button>`:""}</div>
-       ${seg("back.imgFit", S.back.imgFit||"contain", [["contain",l.fitLogo],["cover",l.fitCover]], true)}${(S.back.imgFit==="cover"&&(S.back.logoKey||S.back.logo))?`<span class="glabel" style="margin-top:8px">${esc(l.bandT)}</span>${seg("back.textBand", S.back.textBand||"off", [["off",l.bandOff],["on",l.bandOn]], true)}`:""}${S.back.logoKey||S.back.logo?zoomUI():""}<p class="hint">${esc(l.backHint)}</p></div></div>`
+       ${seg("back.imgFit", S.back.imgFit||"contain", [["contain",l.fitLogo],["cover",l.fitCover]], true)}${(S.back.imgFit==="cover"&&(S.back.logoKey||S.back.logo))?`<span class="glabel" style="margin-top:8px">${esc(l.bandT)}</span>${seg("back.textBand", S.back.textBand||"off", [["off",l.bandOff],["on",l.bandOn]], true)}`:""}${S.back.logoKey||S.back.logo?zoomUI():""}${colorsUI("band")}<p class="hint">${esc(l.backHint)}</p></div></div>`
      : looksUI("back", S.back)}`;
    case 4: return `<h2>${l.h5}</h2><p class="lead">${esc(l.l5)}</p>
      <div class="row"><div class="f"><span>${l.page}</span><select aria-label="${l.page}" data-k="print.page">${Object.entries(PAGES).map(([k,[w,h]])=>`<option value="${k}" ${P.page===k?"selected":""}>${k} · ${Math.round(w)}×${Math.round(h)} mm</option>`).join("")}</select></div><label class="f">${l.dpi}${seg("print.dpi", P.dpi, [[200,"200 dpi"],[300,"300 dpi"]], true)}</label></div>
@@ -1219,7 +1219,7 @@ function memInit(){
 function syncEditor(force){
   const box=$("#cardEd"), l=L(), n=S.data.rows.length, h=S.data.headers;
   if(S.view==="sheet" && n){ box.hidden=true; return; }
-  const sig=[LANG,S.sel,n,h.join("|"),S.front.image.field,S.front.body.field,S.print.qtyField,S.back.imgCol,S.back.mode,S.back.logoKey,Object.keys(S.images).length].join("§");
+  const sig=[LANG,S.sel,n,h.join("|"),S.front.image.field,S.front.body.field,S.print.qtyField,S.back.imgCol,S.back.mode,S.back.logoKey,S.back.textBand,S.front.capPos,S.front.title.field,!!S.back.text,PRO,Object.keys(S.images).length].join("§");
   if(!force && sig===edSig && !box.hidden) return;
   if(!force && document.activeElement && document.activeElement.matches("#cardEd input,#cardEd textarea")) return;
   edSig=sig; box.hidden=false; edArm=0;
@@ -1232,7 +1232,7 @@ function syncEditor(force){
   box.innerHTML=`<details ${edOpen?"open":""}><summary><span class="edic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span><span class="edtx"><b>${esc(l.edT)} · ${S.sel+1}/${n}</b><small>${esc(l.edDesc)}</small></span><span class="edpill"><span class="o">${esc(l.edOpenB)}</span><span class="c">${esc(l.edCloseB)}</span></span></summary>
     <div class="edact"><button class="btn" type="button" data-ed="new">${esc(l.edNew)}</button><button class="btn" type="button" data-ed="dup">${esc(l.edDup)}</button><button class="btn" type="button" data-ed="del">${esc(l.edDel)}</button></div>
     <div class="edimgs">${[["front",l.edFront,key],["back",l.edBack,bkey]].map(([kd,lab,k])=>`<div class="edimgcell"><span class="hint"><b>${esc(lab)}</b>${kd==="back"&&!bkey&&S.back.mode==="uniform"?" · "+esc(l.edBackSame):""}</span><div class="edimg">${k?`<img alt="" src="${S.images[k]}">`:`<span class="noimg"></span>`}<button class="btn" type="button" data-ed="pick-${kd}">${esc(k?l.edChange:l.edPick)}</button>${k?`<button class="btn" type="button" data-ed="no-${kd}">${esc(l.edRemove)}</button>`:""}</div></div>`).join("")}</div>
-    ${S.back.mode==="uniform" && (bkey||S.back.logoKey||S.back.logo)?`<details class="adv" open><summary class="advt"><b>${esc(l.zoomEdT)}</b></summary>${zoomUI(true)}</details>`:""}
+    ${S.back.mode==="uniform" && (bkey||S.back.logoKey||S.back.logo)?`<details class="adv" open><summary class="advt"><b>${esc(l.zoomEdT)}</b></summary>${zoomUI(true)}</details>`:""}${colorsUI("all")}
     <div class="edgrid">${fields}<label class="f" style="flex:0 1 150px">${esc(l.edCopies)}<input type="number" min="1" max="99" step="1" inputmode="numeric" data-cp="1" value="${qv}"></label></div><p class="hint">${esc(l.edDropHint)}</p></details>`; }
 function initEditor(){
   const box=$("#cardEd");
@@ -1258,6 +1258,14 @@ function initEditor(){
     if(!S.data.rows.length || isSample()){ await addImages(fs, true); makePhotoDeck(); return; }
     if(fs.length===1 && S.data.rows.length && S.view!=="sheet") await setCardImage(fs[0]); else await addImages(fs); });
 }
+function colSw(path,cur,auto){ const cs=(auto?[""]:[]).concat(SWATCH), cc=String(cur||""); return `<div class="swatches">${cs.map(c=>c===""?`<button type="button" class="btn sm" data-pc="${path}" data-c="" aria-pressed="${!cc}">${esc(L().colAuto)}</button>`:`<button class="sw" type="button" data-pc="${path}" data-c="${c}" style="background:${c}" aria-label="${c}" aria-pressed="${c.toLowerCase()===cc.toLowerCase()}"></button>`).join("")}<input type="color" data-pcc="${path}" value="${/^#[0-9a-f]{6}$/i.test(cc)?cc:"#888888"}" aria-label="${esc(L().colT)}"></div>`; }
+function colorsUI(which){ const l=L(), F=S.front, B=S.back, p=[];
+  if(which!=="back" && F.fullImage && F.title.field){ p.push(`<span class="glabel sub">${esc(l.colCap)}</span>${colSw("front.capColor",F.capColor,true)}`); if(F.capPos==="below") p.push(`<span class="glabel sub">${esc(l.colCapBg)}</span>${colSw("front.capBg",F.capBg,true)}`); }
+  if(which!=="front" && B.mode==="uniform" && B.text){ if(which!=="band") p.push(`<span class="glabel sub">${esc(l.colBack)}</span>${colSw("back.textColor",B.textColor,false)}`);
+    if(B.textBand==="on" && B.imgFit==="cover" && (B.logoKey||B.logo)) p.push(`<span class="glabel sub">${esc(l.colBand)}</span>${colSw("back.bandColor",B.bandColor||"#000000",false)}<label class="f zrow"><span>${esc(l.colBandOp)}</span><span class="zctl"><input type="range" min="0" max="100" step="5" value="${B.bandAlpha==null?42:B.bandAlpha}" data-pr="bandAlpha" aria-label="${esc(l.colBandOp)}"><input type="number" min="0" max="100" step="5" value="${B.bandAlpha==null?42:B.bandAlpha}" data-pr="bandAlpha" inputmode="numeric" aria-label="${esc(l.colBandOp)}"><i>%</i></span></label>`); }
+  if(!p.length) return "";
+  return `<details class="adv${PRO?"":" prolock"}" open><summary class="advt"><b>${esc(l.colT)}</b>${PRO?"":` <b class="protag">★ Pro</b>`}</summary><div class="group">${p.join("")}${PRO?"":`<p class="hint">${esc(l.colLock)}</p>`}</div></details>`; }
+function proNudge(){ askPro(0).then(c=>{ if(c==="buy") buyPro().then(()=>{ buildPanel(); syncEditor(true); }); }); }
 function zoomUI(all){
   const l=L(), B=S.back, row=(key,lab,min,max,step,val,unit)=>`<label class="f zrow"><span>${esc(lab)}</span><span class="zctl"><input type="range" min="${min}" max="${max}" step="${step}" value="${val}" data-z="${key}" aria-label="${esc(lab)}"><input type="number" min="${min}" max="${max}" step="${step}" value="${val}" data-z="${key}" inputmode="numeric" aria-label="${esc(lab)}"><i>${unit}</i></span></label>`;
   return `<div class="zoom">${row("imgScale",l.zoomT,10,300,5,+B.imgScale||100,"%")}${row("imgX",l.zoomX,-50,50,1,+B.imgX||0,"%")}${row("imgY",l.zoomY,-50,50,1,+B.imgY||0,"%")}<button class="btn" type="button" data-zreset="1">${esc(l.zoomReset)}</button>${all?`<p class="hint">${esc(l.zoomAll)}</p>`:""}</div>`; }
@@ -1309,7 +1317,7 @@ function bindPanel(){
     if(k==="layout"){ applyLayout(v); buildPanel(); scheduleRender(); return; }
     setPath(k, v); b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
     if(k==="back.mode" && v==="data" && S.back.imgCol && colIdx(S.back.imgCol)>=0 && !S.back.image.field){ S.back.image.field=S.back.imgCol; if(!S.back.image.h) S.back.image.h=42; }
-    if(/[mM]ode$|duplex$|frame$|imgFit$/.test(k)) buildPanel();
+    if(/[mM]ode$|duplex$|frame$|imgFit$|textBand$|capPos$/.test(k)){ buildPanel(); syncEditor(true); }
     scheduleRender(); });
   document.querySelectorAll("[data-theme]").forEach(b=>b.onclick=()=>{ themeTo(b.dataset.side, b.dataset.theme); if(b.dataset.side==="front" && S.back.mode==="data") autoConfigBack(b.dataset.theme); buildPanel(); scheduleRender(); });
   document.querySelectorAll("[data-size]").forEach(b=>b.onclick=()=>{ const p=b.dataset.size; S.card.preset=p; if(SIZES[p]){ S.card.w=SIZES[p][0]; S.card.h=SIZES[p][1]; } buildPanel(); scheduleRender(); });
@@ -1363,6 +1371,10 @@ $("#fPhotoDeck").onchange=async e=>{ await addImages(e.target.files, true); e.ta
 $("#fBackImg").onchange=async e=>{ const f=e.target.files[0]; if(f){ const ks=await addImages([f], true); if(ks[0]){ S.back.logoKey=ks[0]; S.back.logo=null; } buildPanel(); setTimeout(scheduleRender,150); } e.target.value=""; };
 $("#fProject").onchange=async e=>{ const f=e.target.files[0]; if(f){ try{ loadProject(JSON.parse(await readFile(f,true))); }catch(err){ toast("?"); } } e.target.value=""; };
 document.querySelectorAll("#viewSeg button").forEach(b=>b.onclick=()=>{ S.view=b.dataset.v; scheduleRender(); });
+document.addEventListener("click", e=>{ const b=e.target.closest&&e.target.closest("[data-pc]"); if(!b) return; if(!PRO){ proNudge(); return; } setPath(b.dataset.pc, b.dataset.c); buildPanel(); syncEditor(true); scheduleRender(); });
+document.addEventListener("input", e=>{ const el=e.target, d=el&&el.dataset; if(!d) return;
+  if(d.pcc!==undefined){ if(!PRO){ el.value="#888888"; proNudge(); return; } setPath(d.pcc, el.value); document.querySelectorAll(".swatches .sw").forEach(x=>{ if(x.dataset.pc===d.pcc) x.setAttribute("aria-pressed", x.dataset.c.toLowerCase()===el.value.toLowerCase()); }); scheduleRender(); return; }
+  if(d.pr!==undefined){ if(!PRO){ el.value=42; proNudge(); return; } const v=parseFloat(el.value); if(isNaN(v)) return; S.back.bandAlpha=Math.max(0,Math.min(100,v)); document.querySelectorAll('[data-pr="bandAlpha"]').forEach(o=>{ if(o!==el) o.value=v; }); scheduleRender(); } });
 document.addEventListener("input", e=>{ const el=e.target, k=el&&el.dataset&&el.dataset.z; if(!k) return; const v=parseFloat(el.value); if(isNaN(v)) return; S.back[k]=v; document.querySelectorAll(`[data-z="${k}"]`).forEach(o=>{ if(o!==el) o.value=v; }); scheduleRender(); });
 document.addEventListener("click", e=>{ const b=e.target.closest&&e.target.closest("[data-zreset]"); if(!b) return; S.back.imgScale=100; S.back.imgX=0; S.back.imgY=0; document.querySelectorAll("[data-z]").forEach(o=>{ o.value=o.dataset.z==="imgScale"?100:0; }); scheduleRender(); }); $("#bUndo").onclick=doUndo; $("#bRedo").onclick=doRedo; $("#bSaveP").onclick=saveProject; $("#bLoadP").onclick=()=>$("#fProject").click(); $("#bExportTop").onclick=()=>exportPDF(false);
 const setLang=g=>{ LANG=g; try{ localStorage.setItem("cp-lang",g); }catch(e){} buildPanel(); scheduleRender(); };
